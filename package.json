@@ -1,0 +1,40 @@
+{
+  "name": "point-dao-contracts",
+  "version": "1.0.0",
+  "description": "Point DAO Contracts",
+  "scripts": {
+    "test": "forge test",
+    "build": "forge build && yarn typechain",
+    "clean": "forge clean && rm -rf ./dist",
+    "prepublishOnly": "rm -rf ./dist && forge clean && forge build && yarn typechain && cp -R contracts dist && cp -R addresses dist",
+    "typechain": "typechain --target=ethers-v5 'dist/artifacts/*/*.json' --out-dir dist/typechain"
+  },
+  "type": "module",
+  "files": [
+    "./dist/**/*",
+    "./dist/*"
+  ],
+  "private": "false",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pointdao/contracts.git"
+  },
+  "author": "James Geary",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pointdao/contracts/issues"
+  },
+  "homepage": "https://github.com/pointdao/contracts#readme",
+  "devDependencies": {
+    "@typechain/ethers-v5": "^10.0.0",
+    "prettier": "^2.6.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.19",
+    "solhint": "^3.3.7",
+    "solhint-plugin-prettier": "^0.0.5",
+    "typechain": "^8.0.0",
+    "typescript": "^4.6.3"
+  },
+  "dependencies": {
+    "solc": "0.8.10"
+  }
+}
