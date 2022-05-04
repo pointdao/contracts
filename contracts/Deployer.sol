@@ -1,18 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import {GalaxyLocker} from "./GalaxyLocker.sol";
-import {GalaxyParty} from "./GalaxyParty.sol";
-import {Point} from "./Point.sol";
-import {PointGovernor} from "./PointGovernor.sol";
-import {PointTreasury} from "./PointTreasury.sol";
-import {Vesting} from "./Vesting.sol";
+import {Diamond} from "./diamond/Diamond.sol";
+import {AdminFacet} from "./diamond/facets/AdminFacet.sol";
+import {GalaxyHolderFacet} from "./diamond/facets/GalaxyHolderFacet.sol";
+import {GalaxyPartyFacet} from "./diamond/facets/GalaxyPartyFacet.sol";
+import {PointTokenFacet} from "./diamond/facets/PointTokenFacet.sol";
+import {IDiamondCut} from "./diamond/interfaces/IDiamondCut.sol";
+import {IDiamondLoupe} from "./diamond/interfaces/IDiamondLoupe.sol";
+import {IERC173} from "./diamond/interfaces/IERC173.sol";
+import {PointGovernor} from "./governance/PointGovernor.sol";
+import {PointTreasury} from "./governance/PointTreasury.sol";
+import {Vesting} from "./governance/Vesting.sol";
 
 /* Deploys entire protocol atomically */
 contract Deployer {
-    GalaxyLocker public galaxyLocker;
-    GalaxyParty public galaxyParty;
-    Point public pointToken;
+    Diamond public diamond;
+    GalaxyPartyFacet public galaxyParty;
+    PointTokenFacet public pointToken;
+    AdminFacet public admin;
+    GalaxyHolderFacet public galaxyHolder;
+
     PointGovernor public pointGovernor;
     PointTreasury public pointTreasury;
     Vesting public vesting;
@@ -22,33 +30,36 @@ contract Deployer {
         address multisig,
         address weth
     ) {
-        // token
-        pointToken = new Point();
+        diamond = new Diamond(address(this));
 
-        // deploy governance
-        address[] memory empty = new address[](0);
-        pointTreasury = new PointTreasury(86400, empty, empty, weth);
-        pointGovernor = new PointGovernor(pointToken, pointTreasury);
+        // diamond.pointToken = new Point();
 
-        // governor can propose, execute and cancel proposals
-        pointTreasury.grantRole(pointTreasury.PROPOSER_ROLE(), address(pointGovernor));
-        pointTreasury.grantRole(pointTreasury.EXECUTOR_ROLE(), address(pointGovernor));
-        pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(pointGovernor));
+        // // token
 
-        // multisig can cancel proposals and grant/revoke roles
-        pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(multisig));
-        pointTreasury.grantRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(multisig));
+        // // deploy governance
+        // address[] memory empty = new address[](0);
+        // pointTreasury = new PointTreasury(86400, empty, empty, weth);
+        // pointGovernor = new PointGovernor(pointToken, pointTreasury);
 
-        // revoke unnecessary admin roles
-        pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(pointTreasury));
-        pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(this));
+        // // governor can propose, execute and cancel proposals
+        // pointTreasury.grantRole(pointTreasury.PROPOSER_ROLE(), address(pointGovernor));
+        // pointTreasury.grantRole(pointTreasury.EXECUTOR_ROLE(), address(pointGovernor));
+        // pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(pointGovernor));
 
-        // deployer galaxy managers (point minter and burner)
-        galaxyLocker = new GalaxyLocker(pointToken, azimuth, address(pointTreasury));
-        galaxyParty = new GalaxyParty(azimuth, multisig, pointToken, galaxyLocker, payable(address(pointTreasury)));
+        // // multisig can cancel proposals and grant/revoke roles
+        // pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(multisig));
+        // pointTreasury.grantRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(multisig));
 
-        // initialize token
-        vesting = new Vesting(pointTreasury);
-        pointToken.init(pointTreasury, vesting, galaxyParty, galaxyLocker);
+        // // revoke unnecessary admin roles
+        // pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(pointTreasury));
+        // pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(this));
+
+        // // deployer galaxy managers (point minter and burner)
+        // galaxyLocker = new GalaxyLocker(pointToken, azimuth, address(pointTreasury));
+        // galaxyParty = new GalaxyParty(azimuth, multisig, pointToken, galaxyLocker, payable(address(pointTreasury)));
+
+        // // initialize token
+        // vesting = new Vesting(pointTreasury);
+        // pointToken.init(pointTreasury, vesting, galaxyParty, galaxyLocker);
     }
 }
