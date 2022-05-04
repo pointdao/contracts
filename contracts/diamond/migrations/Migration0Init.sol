@@ -26,10 +26,19 @@ contract Migration0Init {
         s.token.maxSupply = 266_664_000 * 10**18;
         s.token.PARTY_AMOUNT = 1_000_000 * 10**18;
         s.token.INITIAL_CHAIN_ID = block.chainid;
-        s.token.INITIAL_DOMAIN_SEPARATOR = LibPointTokencomputeDomainSeparator();
+        s.token.INITIAL_DOMAIN_SEPARATOR = LibPointToken.computeDomainSeparator();
         s.token.paused = true;
         s.token._DELEGATION_TYPEHASH = keccak256("Delegation(address delegatee,uint256 nonce,uint256 expiry)");
         LibPointToken.mint(vesting, 10_664_000);
+        bytes32 hashedName = keccak256(bytes(s.token.name));
+        bytes32 hashedVersion = keccak256(bytes("1"));
+        bytes32 typeHash = keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+        // s.token._HASHED_NAME = hashedName;
+        // s.token._HASHED_VERSION = hashedVersion;
+        // s.token._CACHED_CHAIN_ID = block.chainid;
+        // s.token._CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(typeHash, hashedName, hashedVersion);
+        // s.token._CACHED_THIS = address(this);
+        // s.token._TYPE_HASH = typeHash;
 
         s.urbit.azimuth = IAzimuth(azimuth);
         LibUrbit.updateEcliptic(s);

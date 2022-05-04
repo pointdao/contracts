@@ -8,12 +8,6 @@ import {IEcliptic} from "../interfaces/IUrbit.sol";
 import {LibUrbit} from "../libraries/LibUrbit.sol";
 
 contract GalaxyHolderFacet is Modifiers {
-    AppStorage internal s;
-
-    function updateEcliptic() external onlyGovernanceOrOwnerOrMultisigOrManager {
-        LibUrbit.updateEcliptic(s);
-    }
-
     function setManagementProxy(uint32 _point, address _manager) external onlyGovernanceOrOwnerOrMultisigOrManager {
         LibUrbit.setManagementProxy(_point, _manager);
     }

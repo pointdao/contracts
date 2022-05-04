@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import {AppStorage, SwapStatus, AskStatus, Modifiers} from "../libraries/LibAppStorage.sol";
+import {AppStorage, SwapStatus, AskStatus, Modifiers, Swap, Ask} from "../libraries/LibAppStorage.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibUrbit} from "../libraries/LibUrbit.sol";
 import {LibPointToken} from "../libraries/LibPointToken.sol";
 
 contract GalaxyPartyFacet is Modifiers {
-    AppStorage internal s;
-
     event AskCreated(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
 
     event AskCanceled(uint16 askId);
@@ -24,11 +22,11 @@ contract GalaxyPartyFacet is Modifiers {
 
     event AskSettled(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
 
-    event ETHTransferFailed(address intended, uint256 amount, address treasury);
+    event ETHTransferFailed(address intended, uint256 amount);
 
     function initiateGalaxySwap(uint8 _point) public {
         LibUrbit.updateEcliptic(s);
-        require(s.galaxyParty.ecliptic.ownerOf(uint256(_point)) == LibMeta.msgSender(), "caller must own galaxy");
+        require(s.urbit.ecliptic.ownerOf(uint256(_point)) == LibMeta.msgSender(), "caller must own galaxy");
         s.galaxyParty.swapIds++;
         s.galaxyParty.swaps[s.galaxyParty.swapIds] = Swap(LibMeta.msgSender(), _point, block.number, SwapStatus.INITIATED);
         emit SwapInitiated(s.galaxyParty.swapIds, LibMeta.msgSender(), _point);
@@ -39,7 +37,7 @@ contract GalaxyPartyFacet is Modifiers {
         uint8 _point = s.galaxyParty.swaps[_swapId].point;
         LibUrbit.updateEcliptic(s);
         require(s.galaxyParty.swaps[_swapId].status == SwapStatus.INITIATED, "swap must exist and be in INITIATED state");
-        require(s.ecliptic.ownerOf(uint256(_point)) == _sender, "caller must own galaxy");
+        require(s.urbit.ecliptic.ownerOf(uint256(_point)) == _sender, "caller must own galaxy");
         require(s.galaxyParty.swaps[_swapId].owner == _sender, "caller must be swap creator");
         require(block.number > s.galaxyParty.swaps[_swapId].initiatedBlock, "caller must complete swap in a later block");
         s.urbit.ecliptic.safeTransferFrom(_sender, address(this), uint256(_point));
@@ -51,7 +49,7 @@ contract GalaxyPartyFacet is Modifiers {
     function cancelGalaxySwap(uint16 _swapId) public {
         LibUrbit.updateEcliptic(s);
         uint8 _point = s.galaxyParty.swaps[_swapId].point;
-        uint8 _sender = LibMeta.msgSender();
+        address _sender = LibMeta.msgSender();
         require(s.galaxyParty.swaps[_swapId].status == SwapStatus.INITIATED, "swap must exist and be in INITIATED state");
         require(s.galaxyParty.swaps[_swapId].owner == _sender, "caller must be swap creator");
         s.galaxyParty.swaps[_swapId].status = SwapStatus.CANCELED;
@@ -64,17 +62,17 @@ contract GalaxyPartyFacet is Modifiers {
         uint256 _pointAmount // POINT for seller, must be in 1 POINT increments
     ) public {
         LibUrbit.updateEcliptic(s);
-        require(s.urbit.ecliptic.ownerOf(uint256(_point)) == _msgSender(), "caller must own galaxy");
+        require(s.urbit.ecliptic.ownerOf(uint256(_point)) == LibMeta.msgSender(), "caller must own galaxy");
         require(_pointAmount < s.token.PARTY_AMOUNT, "_pointAmount must be less than total PARTY_AMOUNT");
         require(_pointAmount % s.galaxyParty.SELLER_POINT_INCREMENT == 0, "seller can only ask for whole number of POINT");
         require(_ethPerPoint > 0, "eth per point must be greater than 0");
-        require(_ethPerPoint % s.SELLER_ETH_PER_POINT_INCREMENT == 0, "eth per point must be in 0.001 ETH increments");
+        require(_ethPerPoint % s.galaxyParty.SELLER_ETH_PER_POINT_INCREMENT == 0, "eth per point must be in 0.001 ETH increments");
 
         //TODO: fix rounding / division stuff
         uint256 _amount = ((s.token.PARTY_AMOUNT - _pointAmount) / 10**18) * _ethPerPoint; // amount unallocated ETH
 
         s.galaxyParty.askIds++;
-        asks[s.galaxyParty.askIds] = Ask(LibMeta.msgSender(), _amount, _pointAmount, 0, _point, AskStatus.CREATED);
+        s.galaxyParty.asks[s.galaxyParty.askIds] = Ask(LibMeta.msgSender(), _amount, _pointAmount, 0, _point, AskStatus.CREATED);
 
         emit AskCreated(s.galaxyParty.askIds, LibMeta.msgSender(), _point, _amount, _pointAmount);
     }
@@ -168,13 +166,13 @@ contract GalaxyPartyFacet is Modifiers {
         s.galaxyParty.claimed[_askId][LibMeta.msgSender()] = true;
         if (s.galaxyParty.asks[_askId].status == AskStatus.ENDED) {
             uint256 _pointAmount = (s.galaxyParty.totalContributed[_askId][LibMeta.msgSender()] / s.galaxyParty.asks[_askId].amount) *
-                (s.galaxyParty.PARTY_AMOUNT - s.galaxyParty.asks[_askId].pointAmount);
+                (s.token.PARTY_AMOUNT - s.galaxyParty.asks[_askId].pointAmount);
             LibPointToken.mint(LibMeta.msgSender(), _pointAmount);
         } else if (s.galaxyParty.asks[_askId].status == AskStatus.CANCELED) {
             uint256 _ethAmount = s.galaxyParty.totalContributed[_askId][LibMeta.msgSender()];
             (bool success, ) = LibMeta.msgSender().call{value: _ethAmount}("");
             if (!success) {
-                emit ETHTransferFailed(LibMeta.msgSender(), _ethAmount, treasury);
+                emit ETHTransferFailed(LibMeta.msgSender(), _ethAmount);
             }
         }
     }

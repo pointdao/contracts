@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
-import {AppStorage, Modifiers} from "../libraries/LibAppStorage.sol";
+import {AppStorage, Modifiers, Checkpoint} from "../libraries/LibAppStorage.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibPointToken} from "../libraries/LibPointToken.sol";
 
 contract PointTokenFacet is Modifiers {
-    AppStorage internal s;
-
     /*//////////////////////////////////////////////////////////////
                                ERC20
     //////////////////////////////////////////////////////////////*/
@@ -51,11 +50,11 @@ contract PointTokenFacet is Modifiers {
         address spender,
         uint256 value,
         uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     ) external {
-        LibPointToken.permit(owner, spender, value, deadline, v, r, s);
+        LibPointToken.permit(owner, spender, value, deadline, _v, _r, _s);
     }
 
     function nonces(address owner) external view returns (uint256) {
@@ -155,7 +154,7 @@ contract PointTokenFacet is Modifiers {
      * @dev Delegate votes from the sender to `delegatee`.
      */
     function delegate(address delegatee) external {
-        LibPointToken.delegate(delgatee);
+        LibPointToken.delegate(delegatee);
     }
 
     /**
@@ -165,10 +164,10 @@ contract PointTokenFacet is Modifiers {
         address delegatee,
         uint256 nonce,
         uint256 expiry,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     ) external {
-        LibPointToken.delegateBySig(delegatee, nonce, expiry, v, r, s);
+        LibPointToken.delegateBySig(delegatee, nonce, expiry, _v, _r, _s);
     }
 }

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
 import {LibDiamond} from "./LibDiamond.sol";
-import {LibAppStorage, AppStorage, Modifiers} from "./LibAppStorage.sol";
+import {LibAppStorage, AppStorage, Modifiers, Checkpoint} from "./LibAppStorage.sol";
 import {LibMeta} from "./LibMeta.sol";
 
 library LibPointToken {
@@ -34,7 +37,7 @@ library LibPointToken {
             s.token.balanceOf[to] += amount;
         }
 
-        require(totalSupply() <= _maxSupply(), "ERC20Votes: total supply risks overflowing votes");
+        require(s.token.totalSupply <= s.token.maxSupply, "ERC20Votes: total supply risks overflowing votes");
 
         _writeCheckpoint(s.token._totalSupplyCheckpoints, _add, amount);
 
@@ -76,7 +79,7 @@ library LibPointToken {
 
         emit Transfer(LibMeta.msgSender(), to, amount);
 
-        _moveVotingPower(s.token.delegates[LibMeta.msgSender()], s.token.delegates[to], amount);
+        _moveVotingPower(s.token._delegates[LibMeta.msgSender()], s.token._delegates[to], amount);
 
         return true;
     }
@@ -100,15 +103,9 @@ library LibPointToken {
 
         emit Transfer(from, to, amount);
 
-        _moveVotingPower(s.token.delegates[from], d.token.delegates[to], amount);
+        _moveVotingPower(s.token._delegates[from], s.token._delegates[to], amount);
 
         return true;
-    }
-
-    function DOMAIN_SEPARATOR() internal returns (bytes32) {
-        AppStorage storage s = LibAppStorage.diamondStorage();
-
-        return block.chainid == s.token.INITIAL_CHAIN_ID ? s.token.INITIAL_DOMAIN_SEPARATOR : computeDomainSeparator();
     }
 
     function permit(
@@ -116,11 +113,13 @@ library LibPointToken {
         address spender,
         uint256 value,
         uint256 deadline,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
+
+        uint256 nonce = s.token.nonces[owner]++;
 
         require(deadline >= block.timestamp, "PERMIT_DEADLINE_EXPIRED");
 
@@ -136,15 +135,15 @@ library LibPointToken {
                                 owner,
                                 spender,
                                 value,
-                                s.token.nonces[owner]++,
+                                nonce,
                                 deadline
                             )
                         )
                     )
                 ),
-                v,
-                r,
-                s
+                _v,
+                _r,
+                _s
             );
 
             require(recoveredAddress != address(0) && recoveredAddress == owner, "INVALID_SIGNER");
@@ -162,11 +161,13 @@ library LibPointToken {
     }
 
     function computeDomainSeparator() internal view returns (bytes32) {
+        AppStorage storage s = LibAppStorage.diamondStorage();
+
         return
             keccak256(
                 abi.encode(
                     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                    keccak256(bytes(name)),
+                    keccak256(bytes(s.token.name)),
                     keccak256("1"),
                     block.chainid,
                     address(this)
@@ -184,8 +185,8 @@ library LibPointToken {
     function delegate(address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        address currentDelegate = s.token.delegates(LibMeta.msgSender());
-        uint256 delegatorBalance = s.token.balanceOf(LibMeta.msgSender());
+        address currentDelegate = s.token._delegates[LibMeta.msgSender()];
+        uint256 delegatorBalance = s.token.balanceOf[LibMeta.msgSender()];
         s.token._delegates[LibMeta.msgSender()] = delegatee;
 
         emit DelegateChanged(LibMeta.msgSender(), currentDelegate, delegatee);
@@ -197,22 +198,22 @@ library LibPointToken {
         address delegatee,
         uint256 nonce,
         uint256 expiry,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
         require(block.timestamp <= expiry, "ERC20Votes: signature expired");
-        address signer = ECDSA.recover(_hashTypedDataV4(keccak256(abi.encode(s.token._DELEGATION_TYPEHASH, delegatee, nonce, expiry))), v, r, s);
+        address signer = ECDSA.recover(ECDSA.toTypedDataHash(DOMAIN_SEPARATOR(), keccak256(abi.encode(s.token._DELEGATION_TYPEHASH, delegatee, nonce, expiry))), _v, _r, _s);
         require(nonce == _useNonce(signer), "ERC20Votes: invalid nonce");
         _delegate(signer, delegatee);
     }
 
     function _delegate(address delegator, address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address currentDelegate = s.token.delegates(delegator);
-        uint256 delegatorBalance = s.token.balanceOf(delegator);
+        address currentDelegate = s.token._delegates[delegator];
+        uint256 delegatorBalance = s.token.balanceOf[delegator];
         s.token._delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
@@ -225,6 +226,7 @@ library LibPointToken {
         address dst,
         uint256 amount
     ) private {
+        AppStorage storage s = LibAppStorage.diamondStorage();
         if (src != dst && amount > 0) {
             if (src != address(0)) {
                 (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(s.token._checkpoints[src], _subtract, amount);

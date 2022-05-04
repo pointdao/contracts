@@ -9,10 +9,12 @@ import {LibUrbit} from "../libraries/LibUrbit.sol";
 import {LibPointToken} from "../libraries/LibPointToken.sol";
 
 contract AdminFacet is Modifiers {
-    AppStorage internal s;
+    function updateEcliptic() external onlyGovernanceOrOwnerOrMultisigOrManager {
+        LibUrbit.updateEcliptic(s);
+    }
 
     function runMigration(address migration, bytes memory _calldata) external onlyGovernanceOrOwnerOrMultisig {
-        LibUrbit.runMigration(migration, _calldata);
+        LibDiamond.runMigration(migration, _calldata);
     }
 
     function pauseTokenTransfers() public whenNotPaused onlyGovernanceOrOwnerOrMultisig {

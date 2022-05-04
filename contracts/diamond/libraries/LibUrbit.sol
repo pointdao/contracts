@@ -9,7 +9,7 @@ import {IEcliptic} from "../interfaces/IUrbit.sol";
 library LibUrbit {
     function updateEcliptic(AppStorage storage s) internal {
         require(address(s.urbit.azimuth) != address(0), "Azimuth address not set");
-        s.ecliptic = IEcliptic(azimuth.owner());
+        s.urbit.ecliptic = IEcliptic(s.urbit.azimuth.owner());
     }
 
     function setManagementProxy(uint32 _point, address _manager) internal {

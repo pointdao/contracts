@@ -4,7 +4,7 @@ pragma solidity 0.8.10;
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {IERC173} from "../interfaces/IERC173.sol";
 
-contract Ownable is IERC173 {
+contract OwnableFacet is IERC173 {
     function transferOwnership(address _newOwner) external override {
         LibDiamond.enforceIsContractOwner();
         LibDiamond.setContractOwner(_newOwner);

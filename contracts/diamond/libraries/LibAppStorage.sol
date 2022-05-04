@@ -4,6 +4,8 @@ pragma solidity 0.8.10;
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC173} from "../interfaces/IERC173.sol";
 import {IEcliptic, IAzimuth} from "../interfaces/IUrbit.sol";
+import {LibDiamond} from "./LibDiamond.sol";
+import {LibMeta} from "./LibMeta.sol";
 
 // Token
 
@@ -29,6 +31,12 @@ struct TokenStorage {
     mapping(address => Checkpoint[]) _checkpoints;
     Checkpoint[] _totalSupplyCheckpoints;
     uint256 PARTY_AMOUNT;
+    // bytes32 _CACHED_DOMAIN_SEPARATOR;
+    // uint256 _CACHED_CHAIN_ID;
+    // address _CACHED_THIS;
+    // bytes32 _HASHED_NAME;
+    // bytes32 _HASHED_VERSION;
+    // bytes32 _TYPE_HASH;
 }
 
 // Urbit
@@ -96,7 +104,7 @@ struct AppStorage {
     TokenStorage token;
     UrbitStorage urbit;
     GalaxyPartyStorage galaxyParty;
-    address payable governance;
+    GovernanceStorage governance;
 }
 
 library LibAppStorage {
@@ -132,13 +140,13 @@ contract Modifiers {
 
     modifier onlyGovernance() {
         address sender = LibMeta.msgSender();
-        require(sender == s.governance, "Only governance can call this function");
+        require(sender == s.governance.governance, "Only governance can call this function");
         _;
     }
 
     modifier onlyGovernanceOrOwner() {
         address sender = LibMeta.msgSender();
-        require(sender == s.governance || sender == LibDiamond.contractOwner(), "LibAppStorage: Do not have access");
+        require(sender == s.governance.governance || sender == LibDiamond.contractOwner(), "LibAppStorage: Do not have access");
         _;
     }
 
