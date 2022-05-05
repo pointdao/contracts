@@ -5,9 +5,9 @@
   "scripts": {
     "test": "forge test",
     "build": "forge build && yarn typechain",
-    "clean": "forge clean && rm -rf ./dist",
-    "prepublishOnly": "rm -rf ./dist && forge clean && forge build && yarn typechain && cp -R contracts dist && cp -R addresses dist",
-    "typechain": "typechain --target=ethers-v5 'dist/artifacts/*/*.json' --out-dir dist/typechain"
+    "clean": "forge clean && rm -rf ./out",
+    "prepublishOnly": "rm -rf ./out && forge clean && forge build && yarn typechain",
+    "typechain": "typechain --target=ethers-v5 'out/*/*.json' --out-dir out/typechain"
   },
   "type": "module",
   "files": [
