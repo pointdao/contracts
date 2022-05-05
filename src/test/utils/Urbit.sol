@@ -22,10 +22,7 @@ contract Ownable {
     address public owner;
 
     event OwnershipRenounced(address indexed previousOwner);
-    event OwnershipTransferred(
-        address indexed previousOwner,
-        address indexed newOwner
-    );
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
      * @dev The Ownable constructor sets the original `owner` of the contract to the sender
@@ -201,10 +198,7 @@ interface ERC165 {
      * @dev Interface identification is specified in ERC-165. This function
      * uses less than 30,000 gas.
      */
-    function supportsInterface(bytes4 _interfaceId)
-        external
-        view
-        returns (bool);
+    function supportsInterface(bytes4 _interfaceId) external view returns (bool);
 }
 
 // OpenZeppelin's SupportsInterfaceWithLookup.sol
@@ -237,11 +231,7 @@ contract SupportsInterfaceWithLookup is ERC165 {
     /**
      * @dev implement supportsInterface(bytes4) using a lookup table
      */
-    function supportsInterface(bytes4 _interfaceId)
-        external
-        view
-        returns (bool)
-    {
+    function supportsInterface(bytes4 _interfaceId) external view returns (bool) {
         return supportedInterfaces[_interfaceId];
     }
 
@@ -297,21 +287,9 @@ contract ERC721Basic is ERC165 {
      *   bytes4(keccak256('tokenURI(uint256)'))
      */
 
-    event Transfer(
-        address indexed _from,
-        address indexed _to,
-        uint256 indexed _tokenId
-    );
-    event Approval(
-        address indexed _owner,
-        address indexed _approved,
-        uint256 indexed _tokenId
-    );
-    event ApprovalForAll(
-        address indexed _owner,
-        address indexed _operator,
-        bool _approved
-    );
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
+    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     function balanceOf(address _owner) public view returns (uint256 _balance);
 
@@ -321,17 +299,11 @@ contract ERC721Basic is ERC165 {
 
     function approve(address _to, uint256 _tokenId) public;
 
-    function getApproved(uint256 _tokenId)
-        public
-        view
-        returns (address _operator);
+    function getApproved(uint256 _tokenId) public view returns (address _operator);
 
     function setApprovalForAll(address _operator, bool _approved) public;
 
-    function isApprovedForAll(address _owner, address _operator)
-        public
-        view
-        returns (bool);
+    function isApprovedForAll(address _owner, address _operator) public view returns (bool);
 
     function transferFrom(
         address _from,
@@ -362,10 +334,7 @@ contract ERC721Basic is ERC165 {
 contract ERC721Enumerable is ERC721Basic {
     function totalSupply() public view returns (uint256);
 
-    function tokenOfOwnerByIndex(address _owner, uint256 _index)
-        public
-        view
-        returns (uint256 _tokenId);
+    function tokenOfOwnerByIndex(address _owner, uint256 _index) public view returns (uint256 _tokenId);
 
     function tokenByIndex(uint256 _index) public view returns (uint256);
 }
@@ -513,13 +482,7 @@ contract Azimuth is Ownable {
 
     //  ChangedKeys: :point has new network public keys
     //
-    event ChangedKeys(
-        uint32 indexed point,
-        bytes32 encryptionKey,
-        bytes32 authenticationKey,
-        uint32 cryptoSuiteVersion,
-        uint32 keyRevisionNumber
-    );
+    event ChangedKeys(uint32 indexed point, bytes32 encryptionKey, bytes32 authenticationKey, uint32 cryptoSuiteVersion, uint32 keyRevisionNumber);
 
     //  BrokeContinuity: :point has a new continuity number, :number
     //
@@ -531,17 +494,11 @@ contract Azimuth is Ownable {
 
     //  ChangedTransferProxy: :transferProxy can now transfer ownership of :point
     //
-    event ChangedTransferProxy(
-        uint32 indexed point,
-        address indexed transferProxy
-    );
+    event ChangedTransferProxy(uint32 indexed point, address indexed transferProxy);
 
     //  ChangedManagementProxy: :managementProxy can now manage :point
     //
-    event ChangedManagementProxy(
-        uint32 indexed point,
-        address indexed managementProxy
-    );
+    event ChangedManagementProxy(uint32 indexed point, address indexed managementProxy);
 
     //  ChangedVotingProxy: :votingProxy can now vote using :point
     //
@@ -731,8 +688,7 @@ contract Azimuth is Ownable {
     //  transferringForIndexes: per address, per point, (index + 1) in
     //                          the transferringFor array
     //
-    mapping(address => mapping(uint32 => uint256))
-        public transferringForIndexes;
+    mapping(address => mapping(uint32 => uint256)) public transferringForIndexes;
 
     //
     //  Logic
@@ -785,22 +741,13 @@ contract Azimuth is Ownable {
         )
     {
         Point storage point = points[_point];
-        return (
-            point.encryptionKey,
-            point.authenticationKey,
-            point.cryptoSuiteVersion,
-            point.keyRevisionNumber
-        );
+        return (point.encryptionKey, point.authenticationKey, point.cryptoSuiteVersion, point.keyRevisionNumber);
     }
 
     //  getKeyRevisionNumber(): gets the revision number of _point's current
     //                          public keys
     //
-    function getKeyRevisionNumber(uint32 _point)
-        external
-        view
-        returns (uint32 revision)
-    {
+    function getKeyRevisionNumber(uint32 _point) external view returns (uint32 revision) {
         return points[_point].keyRevisionNumber;
     }
 
@@ -814,28 +761,18 @@ contract Azimuth is Ownable {
     //
     function isLive(uint32 _point) external view returns (bool result) {
         Point storage point = points[_point];
-        return (point.encryptionKey != 0 &&
-            point.authenticationKey != 0 &&
-            point.cryptoSuiteVersion != 0);
+        return (point.encryptionKey != 0 && point.authenticationKey != 0 && point.cryptoSuiteVersion != 0);
     }
 
     //  getContinuityNumber(): returns _point's current continuity number
     //
-    function getContinuityNumber(uint32 _point)
-        external
-        view
-        returns (uint32 continuityNumber)
-    {
+    function getContinuityNumber(uint32 _point) external view returns (uint32 continuityNumber) {
         return points[_point].continuityNumber;
     }
 
     //  getSpawnCount(): return the number of children spawned by _point
     //
-    function getSpawnCount(uint32 _point)
-        external
-        view
-        returns (uint32 spawnCount)
-    {
+    function getSpawnCount(uint32 _point) external view returns (uint32 spawnCount) {
         uint256 len = points[_point].spawned.length;
         assert(len < 2**32);
         return uint32(len);
@@ -846,11 +783,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getSpawned(uint32 _point)
-        external
-        view
-        returns (uint32[] spawned)
-    {
+    function getSpawned(uint32 _point) external view returns (uint32[] spawned) {
         return points[_point].spawned;
     }
 
@@ -869,11 +802,7 @@ contract Azimuth is Ownable {
     //  isSponsor(): returns true if _sponsor is currently providing service
     //               to _point
     //
-    function isSponsor(uint32 _point, uint32 _sponsor)
-        external
-        view
-        returns (bool result)
-    {
+    function isSponsor(uint32 _point, uint32 _sponsor) external view returns (bool result) {
         Point storage point = points[_point];
         return (point.hasSponsor && (point.sponsor == _sponsor));
     }
@@ -881,11 +810,7 @@ contract Azimuth is Ownable {
     //  getSponsoringCount(): returns the number of points _sponsor is
     //                        providing service to
     //
-    function getSponsoringCount(uint32 _sponsor)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getSponsoringCount(uint32 _sponsor) external view returns (uint256 count) {
         return sponsoring[_sponsor].length;
     }
 
@@ -895,11 +820,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getSponsoring(uint32 _sponsor)
-        external
-        view
-        returns (uint32[] sponsees)
-    {
+    function getSponsoring(uint32 _sponsor) external view returns (uint32[] sponsees) {
         return sponsoring[_sponsor];
     }
 
@@ -916,22 +837,14 @@ contract Azimuth is Ownable {
     //    the returned escape request is only valid as long as isEscaping()
     //    returns true
     //
-    function getEscapeRequest(uint32 _point)
-        external
-        view
-        returns (uint32 escape)
-    {
+    function getEscapeRequest(uint32 _point) external view returns (uint32 escape) {
         return points[_point].escapeRequestedTo;
     }
 
     //  isRequestingEscapeTo(): returns true if _point has an outstanding
     //                          escape request targetting _sponsor
     //
-    function isRequestingEscapeTo(uint32 _point, uint32 _sponsor)
-        public
-        view
-        returns (bool equals)
-    {
+    function isRequestingEscapeTo(uint32 _point, uint32 _sponsor) public view returns (bool equals) {
         Point storage point = points[_point];
         return (point.escapeRequested && (point.escapeRequestedTo == _sponsor));
     }
@@ -939,11 +852,7 @@ contract Azimuth is Ownable {
     //  getEscapeRequestsCount(): returns the number of points _sponsor
     //                            is providing service to
     //
-    function getEscapeRequestsCount(uint32 _sponsor)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getEscapeRequestsCount(uint32 _sponsor) external view returns (uint256 count) {
         return escapeRequests[_sponsor].length;
     }
 
@@ -953,11 +862,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getEscapeRequests(uint32 _sponsor)
-        external
-        view
-        returns (uint32[] requests)
-    {
+    function getEscapeRequests(uint32 _sponsor) external view returns (uint32[] requests) {
         return escapeRequests[_sponsor];
     }
 
@@ -988,9 +893,7 @@ contract Azimuth is Ownable {
     ) external onlyOwner {
         Point storage point = points[_point];
         if (
-            point.encryptionKey == _encryptionKey &&
-            point.authenticationKey == _authenticationKey &&
-            point.cryptoSuiteVersion == _cryptoSuiteVersion
+            point.encryptionKey == _encryptionKey && point.authenticationKey == _authenticationKey && point.cryptoSuiteVersion == _cryptoSuiteVersion
         ) {
             return;
         }
@@ -1000,13 +903,7 @@ contract Azimuth is Ownable {
         point.cryptoSuiteVersion = _cryptoSuiteVersion;
         point.keyRevisionNumber++;
 
-        emit ChangedKeys(
-            _point,
-            _encryptionKey,
-            _authenticationKey,
-            _cryptoSuiteVersion,
-            point.keyRevisionNumber
-        );
+        emit ChangedKeys(_point, _encryptionKey, _authenticationKey, _cryptoSuiteVersion, point.keyRevisionNumber);
     }
 
     //  incrementContinuityNumber(): break continuity for _point
@@ -1047,10 +944,7 @@ contract Azimuth is Ownable {
 
     //  setEscapeRequest(): for _point, start an escape request to _sponsor
     //
-    function setEscapeRequest(uint32 _point, uint32 _sponsor)
-        external
-        onlyOwner
-    {
+    function setEscapeRequest(uint32 _point, uint32 _sponsor) external onlyOwner {
         if (isRequestingEscapeTo(_point, _sponsor)) {
             return;
         }
@@ -1119,9 +1013,7 @@ contract Azimuth is Ownable {
         //  or if we get the sponsor we already have,
         //  nothing will change, so jump out early.
         //
-        if (
-            (!had && !_hasSponsor) || (had && _hasSponsor && prev == _sponsor)
-        ) {
+        if ((!had && !_hasSponsor) || (had && _hasSponsor && prev == _sponsor)) {
             return;
         }
 
@@ -1181,9 +1073,7 @@ contract Azimuth is Ownable {
         //  or if we were escaping, and the new target is the same,
         //  nothing will change, so jump out early.
         //
-        if (
-            (!was && !_isEscaping) || (was && _isEscaping && prev == _sponsor)
-        ) {
+        if ((!was && !_isEscaping) || (was && _isEscaping && prev == _sponsor)) {
             return;
         }
 
@@ -1241,21 +1131,13 @@ contract Azimuth is Ownable {
 
     //  isOwner(): true if _point is owned by _address
     //
-    function isOwner(uint32 _point, address _address)
-        external
-        view
-        returns (bool result)
-    {
+    function isOwner(uint32 _point, address _address) external view returns (bool result) {
         return (rights[_point].owner == _address);
     }
 
     //  getOwnedPointCount(): return length of array of points that _whose owns
     //
-    function getOwnedPointCount(address _whose)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getOwnedPointCount(address _whose) external view returns (uint256 count) {
         return pointsOwnedBy[_whose].length;
     }
 
@@ -1264,22 +1146,14 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getOwnedPoints(address _whose)
-        external
-        view
-        returns (uint32[] ownedPoints)
-    {
+    function getOwnedPoints(address _whose) external view returns (uint32[] ownedPoints) {
         return pointsOwnedBy[_whose];
     }
 
     //  getOwnedPointAtIndex(): get point at _index from array of points that
     //                         _whose owns
     //
-    function getOwnedPointAtIndex(address _whose, uint256 _index)
-        external
-        view
-        returns (uint32 point)
-    {
+    function getOwnedPointAtIndex(address _whose, uint256 _index) external view returns (uint32 point) {
         uint32[] storage owned = pointsOwnedBy[_whose];
         require(_index < owned.length);
         return owned[_index];
@@ -1289,43 +1163,26 @@ contract Azimuth is Ownable {
 
     //  getManagementProxy(): returns _point's current management proxy
     //
-    function getManagementProxy(uint32 _point)
-        external
-        view
-        returns (address manager)
-    {
+    function getManagementProxy(uint32 _point) external view returns (address manager) {
         return rights[_point].managementProxy;
     }
 
     //  isManagementProxy(): returns true if _proxy is _point's management proxy
     //
-    function isManagementProxy(uint32 _point, address _proxy)
-        external
-        view
-        returns (bool result)
-    {
+    function isManagementProxy(uint32 _point, address _proxy) external view returns (bool result) {
         return (rights[_point].managementProxy == _proxy);
     }
 
     //  canManage(): true if _who is the owner or manager of _point
     //
-    function canManage(uint32 _point, address _who)
-        external
-        view
-        returns (bool result)
-    {
+    function canManage(uint32 _point, address _who) external view returns (bool result) {
         Deed storage deed = rights[_point];
-        return ((0x0 != _who) &&
-            ((_who == deed.owner) || (_who == deed.managementProxy)));
+        return ((0x0 != _who) && ((_who == deed.owner) || (_who == deed.managementProxy)));
     }
 
     //  getManagerForCount(): returns the amount of points _proxy can manage
     //
-    function getManagerForCount(address _proxy)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getManagerForCount(address _proxy) external view returns (uint256 count) {
         return managerFor[_proxy].length;
     }
 
@@ -1334,11 +1191,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getManagerFor(address _proxy)
-        external
-        view
-        returns (uint32[] mfor)
-    {
+    function getManagerFor(address _proxy) external view returns (uint32[] mfor) {
         return managerFor[_proxy];
     }
 
@@ -1346,44 +1199,27 @@ contract Azimuth is Ownable {
 
     //  getSpawnProxy(): returns _point's current spawn proxy
     //
-    function getSpawnProxy(uint32 _point)
-        external
-        view
-        returns (address spawnProxy)
-    {
+    function getSpawnProxy(uint32 _point) external view returns (address spawnProxy) {
         return rights[_point].spawnProxy;
     }
 
     //  isSpawnProxy(): returns true if _proxy is _point's spawn proxy
     //
-    function isSpawnProxy(uint32 _point, address _proxy)
-        external
-        view
-        returns (bool result)
-    {
+    function isSpawnProxy(uint32 _point, address _proxy) external view returns (bool result) {
         return (rights[_point].spawnProxy == _proxy);
     }
 
     //  canSpawnAs(): true if _who is the owner or spawn proxy of _point
     //
-    function canSpawnAs(uint32 _point, address _who)
-        external
-        view
-        returns (bool result)
-    {
+    function canSpawnAs(uint32 _point, address _who) external view returns (bool result) {
         Deed storage deed = rights[_point];
-        return ((0x0 != _who) &&
-            ((_who == deed.owner) || (_who == deed.spawnProxy)));
+        return ((0x0 != _who) && ((_who == deed.owner) || (_who == deed.spawnProxy)));
     }
 
     //  getSpawningForCount(): returns the amount of points _proxy
     //                         can spawn with
     //
-    function getSpawningForCount(address _proxy)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getSpawningForCount(address _proxy) external view returns (uint256 count) {
         return spawningFor[_proxy].length;
     }
 
@@ -1392,11 +1228,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getSpawningFor(address _proxy)
-        external
-        view
-        returns (uint32[] sfor)
-    {
+    function getSpawningFor(address _proxy) external view returns (uint32[] sfor) {
         return spawningFor[_proxy];
     }
 
@@ -1404,44 +1236,27 @@ contract Azimuth is Ownable {
 
     //  getVotingProxy(): returns _point's current voting proxy
     //
-    function getVotingProxy(uint32 _point)
-        external
-        view
-        returns (address voter)
-    {
+    function getVotingProxy(uint32 _point) external view returns (address voter) {
         return rights[_point].votingProxy;
     }
 
     //  isVotingProxy(): returns true if _proxy is _point's voting proxy
     //
-    function isVotingProxy(uint32 _point, address _proxy)
-        external
-        view
-        returns (bool result)
-    {
+    function isVotingProxy(uint32 _point, address _proxy) external view returns (bool result) {
         return (rights[_point].votingProxy == _proxy);
     }
 
     //  canVoteAs(): true if _who is the owner of _point,
     //               or the voting proxy of _point's owner
     //
-    function canVoteAs(uint32 _point, address _who)
-        external
-        view
-        returns (bool result)
-    {
+    function canVoteAs(uint32 _point, address _who) external view returns (bool result) {
         Deed storage deed = rights[_point];
-        return ((0x0 != _who) &&
-            ((_who == deed.owner) || (_who == deed.votingProxy)));
+        return ((0x0 != _who) && ((_who == deed.owner) || (_who == deed.votingProxy)));
     }
 
     //  getVotingForCount(): returns the amount of points _proxy can vote as
     //
-    function getVotingForCount(address _proxy)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getVotingForCount(address _proxy) external view returns (uint256 count) {
         return votingFor[_proxy].length;
     }
 
@@ -1450,11 +1265,7 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getVotingFor(address _proxy)
-        external
-        view
-        returns (uint32[] vfor)
-    {
+    function getVotingFor(address _proxy) external view returns (uint32[] vfor) {
         return votingFor[_proxy];
     }
 
@@ -1462,47 +1273,28 @@ contract Azimuth is Ownable {
 
     //  getTransferProxy(): returns _point's current transfer proxy
     //
-    function getTransferProxy(uint32 _point)
-        external
-        view
-        returns (address transferProxy)
-    {
+    function getTransferProxy(uint32 _point) external view returns (address transferProxy) {
         return rights[_point].transferProxy;
     }
 
     //  isTransferProxy(): returns true if _proxy is _point's transfer proxy
     //
-    function isTransferProxy(uint32 _point, address _proxy)
-        external
-        view
-        returns (bool result)
-    {
+    function isTransferProxy(uint32 _point, address _proxy) external view returns (bool result) {
         return (rights[_point].transferProxy == _proxy);
     }
 
     //  canTransfer(): true if _who is the owner or transfer proxy of _point,
     //                 or is an operator for _point's current owner
     //
-    function canTransfer(uint32 _point, address _who)
-        external
-        view
-        returns (bool result)
-    {
+    function canTransfer(uint32 _point, address _who) external view returns (bool result) {
         Deed storage deed = rights[_point];
-        return ((0x0 != _who) &&
-            ((_who == deed.owner) ||
-                (_who == deed.transferProxy) ||
-                operators[deed.owner][_who]));
+        return ((0x0 != _who) && ((_who == deed.owner) || (_who == deed.transferProxy) || operators[deed.owner][_who]));
     }
 
     //  getTransferringForCount(): returns the amount of points _proxy
     //                             can transfer
     //
-    function getTransferringForCount(address _proxy)
-        external
-        view
-        returns (uint256 count)
-    {
+    function getTransferringForCount(address _proxy) external view returns (uint256 count) {
         return transferringFor[_proxy].length;
     }
 
@@ -1511,22 +1303,14 @@ contract Azimuth is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getTransferringFor(address _proxy)
-        external
-        view
-        returns (uint32[] tfor)
-    {
+    function getTransferringFor(address _proxy) external view returns (uint32[] tfor) {
         return transferringFor[_proxy];
     }
 
     //  isOperator(): returns true if _operator is allowed to transfer
     //                ownership of _owner's points
     //
-    function isOperator(address _owner, address _operator)
-        external
-        view
-        returns (bool result)
-    {
+    function isOperator(address _owner, address _operator) external view returns (bool result) {
         return operators[_owner][_operator];
     }
 
@@ -1595,10 +1379,7 @@ contract Azimuth is Ownable {
 
     //  setManagementProxy(): makes _proxy _point's management proxy
     //
-    function setManagementProxy(uint32 _point, address _proxy)
-        external
-        onlyOwner
-    {
+    function setManagementProxy(uint32 _point, address _proxy) external onlyOwner {
         Deed storage deed = rights[_point];
         address prev = deed.managementProxy;
         if (prev == _proxy) {
@@ -1746,10 +1527,7 @@ contract Azimuth is Ownable {
 
     //  setManagementProxy(): makes _proxy _point's transfer proxy
     //
-    function setTransferProxy(uint32 _point, address _proxy)
-        external
-        onlyOwner
-    {
+    function setTransferProxy(uint32 _point, address _proxy) external onlyOwner {
         Deed storage deed = rights[_point];
         address prev = deed.transferProxy;
         if (prev == _proxy) {
@@ -1833,9 +1611,7 @@ contract ReadsAzimuth {
     //                      and that _point is active
     //
     modifier activePointOwner(uint32 _point) {
-        require(
-            azimuth.isOwner(_point, msg.sender) && azimuth.isActive(_point)
-        );
+        require(azimuth.isOwner(_point, msg.sender) && azimuth.isActive(_point));
         _;
     }
 
@@ -1843,9 +1619,7 @@ contract ReadsAzimuth {
     //                        and that _point is active
     //
     modifier activePointManager(uint32 _point) {
-        require(
-            azimuth.canManage(_point, msg.sender) && azimuth.isActive(_point)
-        );
+        require(azimuth.canManage(_point, msg.sender) && azimuth.isActive(_point));
         _;
     }
 
@@ -1853,9 +1627,7 @@ contract ReadsAzimuth {
     //                        and that _point is active
     //
     modifier activePointSpawner(uint32 _point) {
-        require(
-            azimuth.canSpawnAs(_point, msg.sender) && azimuth.isActive(_point)
-        );
+        require(azimuth.canSpawnAs(_point, msg.sender) && azimuth.isActive(_point));
         _;
     }
 
@@ -1863,9 +1635,7 @@ contract ReadsAzimuth {
     //                        and that _point is active
     //
     modifier activePointVoter(uint32 _point) {
-        require(
-            azimuth.canVoteAs(_point, msg.sender) && azimuth.isActive(_point)
-        );
+        require(azimuth.canVoteAs(_point, msg.sender) && azimuth.isActive(_point));
         _;
     }
 }
@@ -2011,16 +1781,8 @@ contract Polls is Ownable {
 
     //  reconfigure(): change poll duration and cooldown
     //
-    function reconfigure(uint256 _pollDuration, uint256 _pollCooldown)
-        public
-        onlyOwner
-    {
-        require(
-            (5 days <= _pollDuration) &&
-                (_pollDuration <= 90 days) &&
-                (5 days <= _pollCooldown) &&
-                (_pollCooldown <= 90 days)
-        );
+    function reconfigure(uint256 _pollDuration, uint256 _pollCooldown) public onlyOwner {
+        require((5 days <= _pollDuration) && (_pollDuration <= 90 days) && (5 days <= _pollCooldown) && (_pollCooldown <= 90 days));
         pollDuration = _pollDuration;
         pollCooldown = _pollCooldown;
     }
@@ -2052,11 +1814,7 @@ contract Polls is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getDocumentProposals()
-        external
-        view
-        returns (bytes32[] proposals)
-    {
+    function getDocumentProposals() external view returns (bytes32[] proposals) {
         return documentProposals;
     }
 
@@ -2071,33 +1829,21 @@ contract Polls is Ownable {
     //    Note: only useful for clients, as Solidity does not currently
     //    support returning dynamic arrays.
     //
-    function getDocumentMajorities()
-        external
-        view
-        returns (bytes32[] majorities)
-    {
+    function getDocumentMajorities() external view returns (bytes32[] majorities) {
         return documentMajorities;
     }
 
     //  hasVotedOnUpgradePoll(): returns true if _galaxy has voted
     //                           on the _proposal
     //
-    function hasVotedOnUpgradePoll(uint8 _galaxy, address _proposal)
-        external
-        view
-        returns (bool result)
-    {
+    function hasVotedOnUpgradePoll(uint8 _galaxy, address _proposal) external view returns (bool result) {
         return upgradePolls[_proposal].voted[_galaxy];
     }
 
     //  hasVotedOnDocumentPoll(): returns true if _galaxy has voted
     //                            on the _proposal
     //
-    function hasVotedOnDocumentPoll(uint8 _galaxy, bytes32 _proposal)
-        external
-        view
-        returns (bool result)
-    {
+    function hasVotedOnDocumentPoll(uint8 _galaxy, bytes32 _proposal) external view returns (bool result) {
         return documentPolls[_proposal].voted[_galaxy];
     }
 
@@ -2147,10 +1893,7 @@ contract Polls is Ownable {
         //
         //    for completely new polls, the values used will be zero
         //
-        require(
-            block.timestamp >
-                (_poll.start.add(_poll.duration.add(_poll.cooldown)))
-        );
+        require(block.timestamp > (_poll.start.add(_poll.duration.add(_poll.cooldown))));
 
         //  set started poll state
         //
@@ -2224,11 +1967,7 @@ contract Polls is Ownable {
     //                            majority, updating state, sending an event,
     //                            and returning true if it has
     //
-    function updateUpgradePoll(address _proposal)
-        public
-        onlyOwner
-        returns (bool majority)
-    {
+    function updateUpgradePoll(address _proposal) public onlyOwner returns (bool majority) {
         //  _proposal must not have achieved majority before
         //
         require(!upgradeHasAchievedMajority[_proposal]);
@@ -2253,10 +1992,7 @@ contract Polls is Ownable {
     //    this can be called by anyone, because the ecliptic does not
     //    need to be aware of the result
     //
-    function updateDocumentPoll(bytes32 _proposal)
-        public
-        returns (bool majority)
-    {
+    function updateDocumentPoll(bytes32 _proposal) public returns (bool majority) {
         //  _proposal must not have achieved majority before
         //
         require(!documentHasAchievedMajority[_proposal]);
@@ -2279,11 +2015,7 @@ contract Polls is Ownable {
     //  checkPollMajority(): returns true if the majority is in favor of
     //                       the subject of the poll
     //
-    function checkPollMajority(Poll _poll)
-        internal
-        view
-        returns (bool majority)
-    {
+    function checkPollMajority(Poll _poll) internal view returns (bool majority) {
         return (//  poll must have at least the minimum required yes-votes
         //
         (_poll.yesVotes >= (totalVoters / 4)) &&
@@ -2324,12 +2056,7 @@ contract Polls is Ownable {
 contract Claims is ReadsAzimuth {
     //  ClaimAdded: a claim was added by :by
     //
-    event ClaimAdded(
-        uint32 indexed by,
-        string _protocol,
-        string _claim,
-        bytes _dossier
-    );
+    event ClaimAdded(uint32 indexed by, string _protocol, string _claim, bytes _dossier);
 
     //  ClaimRemoved: a claim was removed by :by
     //
@@ -2432,10 +2159,7 @@ contract Claims is ReadsAzimuth {
         //    anyway would make this function slightly harder to think about due
         //    to its relation to Ecliptic's transferPoint().
         //
-        require(
-            azimuth.canManage(_point, msg.sender) ||
-                (msg.sender == azimuth.owner())
-        );
+        require(azimuth.canManage(_point, msg.sender) || (msg.sender == azimuth.owner()));
 
         Claim[maxClaims] storage currClaims = claims[_point];
 
@@ -2445,11 +2169,7 @@ contract Claims is ReadsAzimuth {
             //  only emit the removed event if there was a claim here
             //
             if (0 < bytes(currClaims[i].claim).length) {
-                emit ClaimRemoved(
-                    _point,
-                    currClaims[i].protocol,
-                    currClaims[i].claim
-                );
+                emit ClaimRemoved(_point, currClaims[i].protocol, currClaims[i].claim);
             }
 
             delete currClaims[i];
@@ -2473,10 +2193,7 @@ contract Claims is ReadsAzimuth {
         Claim[maxClaims] storage theirClaims = claims[_whose];
         for (uint8 i = 0; i < maxClaims; i++) {
             Claim storage thisClaim = theirClaims[i];
-            if (
-                (protocolHash == keccak256(bytes(thisClaim.protocol))) &&
-                (claimHash == keccak256(bytes(thisClaim.claim)))
-            ) {
+            if ((protocolHash == keccak256(bytes(thisClaim.protocol))) && (claimHash == keccak256(bytes(thisClaim.claim)))) {
                 return i + 1;
             }
         }
@@ -2556,11 +2273,7 @@ contract EclipticBase is Ownable, ReadsAzimuth {
         //  make sure this is the expected upgrade path,
         //  and that we have gotten the ownership we require
         //
-        require(
-            msg.sender == previousEcliptic &&
-                this == azimuth.owner() &&
-                this == polls.owner()
-        );
+        require(msg.sender == previousEcliptic && this == azimuth.owner() && this == polls.owner());
     }
 
     //  upgrade(): transfer ownership of the ecliptic data to the new
@@ -2635,31 +2348,19 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //            destroyed (`to` == 0). At the time of any transfer, the
     //            approved address for that NFT (if any) is reset to none.
     //
-    event Transfer(
-        address indexed _from,
-        address indexed _to,
-        uint256 indexed _tokenId
-    );
+    event Transfer(address indexed _from, address indexed _to, uint256 indexed _tokenId);
 
     //  Approval: This emits when the approved address for an NFT is changed or
     //            reaffirmed. The zero address indicates there is no approved
     //            address. When a Transfer event emits, this also indicates that
     //            the approved address for that NFT (if any) is reset to none.
     //
-    event Approval(
-        address indexed _owner,
-        address indexed _approved,
-        uint256 indexed _tokenId
-    );
+    event Approval(address indexed _owner, address indexed _approved, uint256 indexed _tokenId);
 
     //  ApprovalForAll: This emits when an operator is enabled or disabled for an
     //                  owner. The operator can manage all NFTs of the owner.
     //
-    event ApprovalForAll(
-        address indexed _owner,
-        address indexed _operator,
-        bool _approved
-    );
+    event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved);
 
     // erc721Received: equal to:
     //        bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"))
@@ -2670,8 +2371,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     // depositAddress: Special address respresenting L2.  Ships sent to
     //                 this address are controlled on L2 instead of here.
     //
-    address public constant depositAddress =
-        0x1111111111111111111111111111111111111111;
+    address public constant depositAddress = 0x1111111111111111111111111111111111111111;
 
     ITreasuryProxy public treasuryProxy;
 
@@ -2679,8 +2379,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //   hash of the treasury implementation to upgrade to
     //   Note: stand-in, just hash of no bytes
     //   could be made immutable and passed in as constructor argument
-    bytes32 public constant treasuryUpgradeHash =
-        hex"26f3eae628fa1a4d23e34b91a4d412526a47620ced37c80928906f9fa07c0774";
+    bytes32 public constant treasuryUpgradeHash = hex"26f3eae628fa1a4d23e34b91a4d412526a47620ced37c80928906f9fa07c0774";
 
     bool public treasuryUpgraded = false;
 
@@ -2723,12 +2422,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
 
     //  ownerOf(): get the current owner of point _tokenId
     //
-    function ownerOf(uint256 _tokenId)
-        public
-        view
-        validPointId(_tokenId)
-        returns (address owner)
-    {
+    function ownerOf(uint256 _tokenId) public view validPointId(_tokenId) returns (address owner) {
         uint32 id = uint32(_tokenId);
 
         //  this will throw if the owner is the zero address,
@@ -2773,12 +2467,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
         //  do the callback last to avoid re-entrancy
         //
         if (_to.isContract()) {
-            bytes4 retval = ERC721Receiver(_to).onERC721Received(
-                msg.sender,
-                _from,
-                _tokenId,
-                _data
-            );
+            bytes4 retval = ERC721Receiver(_to).onERC721Received(msg.sender, _from, _tokenId, _data);
             //
             //  standard return idiom to confirm contract semantics
             //
@@ -2806,10 +2495,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //  approve(): allow _approved to transfer ownership of point
     //             _tokenId
     //
-    function approve(address _approved, uint256 _tokenId)
-        public
-        validPointId(_tokenId)
-    {
+    function approve(address _approved, uint256 _tokenId) public validPointId(_tokenId) {
         setTransferProxy(uint32(_tokenId), _approved);
     }
 
@@ -2825,12 +2511,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
 
     //  getApproved(): get the approved address for point _tokenId
     //
-    function getApproved(uint256 _tokenId)
-        public
-        view
-        validPointId(_tokenId)
-        returns (address approved)
-    {
+    function getApproved(uint256 _tokenId) public view validPointId(_tokenId) returns (address approved) {
         //NOTE  redundant, transfer proxy cannot be set for
         //      inactive points
         //
@@ -2841,11 +2522,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //  isApprovedForAll(): returns true if _operator is an
     //                      operator for _owner
     //
-    function isApprovedForAll(address _owner, address _operator)
-        public
-        view
-        returns (bool result)
-    {
+    function isApprovedForAll(address _owner, address _operator) public view returns (bool result) {
         return azimuth.isOperator(_owner, _operator);
     }
 
@@ -2867,12 +2544,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
 
     //  tokenURI(): returns a URL to an ERC-721 standard JSON file
     //
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        validPointId(_tokenId)
-        returns (string _tokenURI)
-    {
+    function tokenURI(uint256 _tokenId) public view validPointId(_tokenId) returns (string _tokenURI) {
         _tokenURI = "https://azimuth.network/erc721/0000000000.json";
         bytes memory _tokenURIBytes = bytes(_tokenURI);
         _tokenURIBytes[31] = bytes1(48 + ((_tokenId / 1000000000) % 10));
@@ -2906,12 +2578,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
         if (_discontinuous) {
             azimuth.incrementContinuityNumber(_point);
         }
-        azimuth.setKeys(
-            _point,
-            _encryptionKey,
-            _authenticationKey,
-            _cryptoSuiteVersion
-        );
+        azimuth.setKeys(_point, _encryptionKey, _authenticationKey, _cryptoSuiteVersion);
     }
 
     //  spawn(): spawn _point, then either give, or allow _target to take,
@@ -2952,18 +2619,11 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
         //    0x0001.0100 - the first planet of the first star
         //    0x0001.0000 - the first planet of galaxy zero
         //
-        require(
-            (uint8(azimuth.getPointSize(prefix)) + 1) ==
-                uint8(azimuth.getPointSize(_point))
-        );
+        require((uint8(azimuth.getPointSize(prefix)) + 1) == uint8(azimuth.getPointSize(_point)));
 
         //  prefix point must be linked and able to spawn
         //
-        require(
-            (azimuth.hasBeenLinked(prefix)) &&
-                (azimuth.getSpawnCount(prefix) <
-                    getSpawnLimit(prefix, block.timestamp))
-        );
+        require((azimuth.hasBeenLinked(prefix)) && (azimuth.getSpawnCount(prefix) < getSpawnLimit(prefix, block.timestamp)));
 
         //  the owner of a prefix can always spawn its children;
         //  other addresses need explicit permission (the role
@@ -3061,11 +2721,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
         //  can't deposit galaxy to L2
         //  can't deposit contract-owned point to L2
         //
-        require(
-            depositAddress != _target ||
-                (azimuth.getPointSize(_point) != Azimuth.Size.Galaxy &&
-                    !azimuth.getOwner(_point).isContract())
-        );
+        require(depositAddress != _target || (azimuth.getPointSize(_point) != Azimuth.Size.Galaxy && !azimuth.getOwner(_point).isContract()));
 
         //  if the point wasn't active yet, that means transferring it
         //  is part of the "spawn" flow, so we need to activate it
@@ -3161,11 +2817,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    - :msg.sender must be the owner or manager of _point,
     //    - _point must be able to escape to _sponsor as per to canEscapeTo()
     //
-    function escape(uint32 _point, uint32 _sponsor)
-        external
-        activePointManager(_point)
-        onL1(_point)
-    {
+    function escape(uint32 _point, uint32 _sponsor) external activePointManager(_point) onL1(_point) {
         //  if the sponsor is on L2, we need to escape using L2
         //
         require(depositAddress != azimuth.getOwner(_sponsor));
@@ -3188,9 +2840,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //
     function adopt(uint32 _point) external onL1(_point) {
         uint32 request = azimuth.getEscapeRequest(_point);
-        require(
-            azimuth.isEscaping(_point) && azimuth.canManage(request, msg.sender)
-        );
+        require(azimuth.isEscaping(_point) && azimuth.canManage(request, msg.sender));
         require(depositAddress != azimuth.getOwner(request));
 
         //  _sponsor becomes _point's sponsor
@@ -3207,9 +2857,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //
     function reject(uint32 _point) external {
         uint32 request = azimuth.getEscapeRequest(_point);
-        require(
-            azimuth.isEscaping(_point) && azimuth.canManage(request, msg.sender)
-        );
+        require(azimuth.isEscaping(_point) && azimuth.canManage(request, msg.sender));
         require(depositAddress != azimuth.getOwner(request));
 
         //  reset the _point's escape request to "not escaping"
@@ -3231,9 +2879,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //
     function detach(uint32 _point) external {
         uint32 sponsor = azimuth.getSponsor(_point);
-        require(
-            azimuth.hasSponsor(_point) && azimuth.canManage(sponsor, msg.sender)
-        );
+        require(azimuth.hasSponsor(_point) && azimuth.canManage(sponsor, msg.sender));
         require(depositAddress != azimuth.getOwner(sponsor));
 
         //  signal that its sponsor no longer supports _point
@@ -3248,11 +2894,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //  getSpawnLimit(): returns the total number of children the _point
     //                   is allowed to spawn at _time.
     //
-    function getSpawnLimit(uint32 _point, uint256 _time)
-        public
-        view
-        returns (uint32 limit)
-    {
+    function getSpawnLimit(uint32 _point, uint256 _time) public view returns (uint32 limit) {
         Azimuth.Size size = azimuth.getPointSize(_point);
 
         if (size == Azimuth.Size.Galaxy) {
@@ -3281,11 +2923,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
 
     //  canEscapeTo(): true if _point could try to escape to _sponsor
     //
-    function canEscapeTo(uint32 _point, uint32 _sponsor)
-        public
-        view
-        returns (bool canEscape)
-    {
+    function canEscapeTo(uint32 _point, uint32 _sponsor) public view returns (bool canEscape) {
         //  can't escape to a sponsor that hasn't been linked
         //
         if (!azimuth.hasBeenLinked(_sponsor)) return false;
@@ -3335,11 +2973,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    behalf of the owner. This includes public key configuration and
     //    operations relating to sponsorship.
     //
-    function setManagementProxy(uint32 _point, address _manager)
-        external
-        activePointManager(_point)
-        onL1(_point)
-    {
+    function setManagementProxy(uint32 _point, address _manager) external activePointManager(_point) onL1(_point) {
         azimuth.setManagementProxy(_point, _manager);
     }
 
@@ -3350,11 +2984,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //
     //    fails if spawn rights have been deposited to L2
     //
-    function setSpawnProxy(uint16 _prefix, address _spawnProxy)
-        external
-        activePointSpawner(_prefix)
-        onL1(_prefix)
-    {
+    function setSpawnProxy(uint16 _prefix, address _spawnProxy) external activePointSpawner(_prefix) onL1(_prefix) {
         require(depositAddress != azimuth.getSpawnProxy(_prefix));
 
         azimuth.setSpawnProxy(_prefix, _spawnProxy);
@@ -3365,10 +2995,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    the voting proxy is allowed to start polls and cast votes
     //    on the point's behalf.
     //
-    function setVotingProxy(uint8 _galaxy, address _voter)
-        external
-        activePointVoter(_galaxy)
-    {
+    function setVotingProxy(uint8 _galaxy, address _voter) external activePointVoter(_galaxy) {
         azimuth.setVotingProxy(_galaxy, _voter);
     }
 
@@ -3378,10 +3005,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    - :msg.sender must be either _point's current owner,
     //      or be an operator for the current owner
     //
-    function setTransferProxy(uint32 _point, address _transferProxy)
-        public
-        onL1(_point)
-    {
+    function setTransferProxy(uint32 _point, address _transferProxy) public onL1(_point) {
         //  owner: owner of _point
         //
         address owner = azimuth.getOwner(_point);
@@ -3411,10 +3035,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    - the _proposal must expect to be upgraded from this specific
     //      contract, as indicated by its previousEcliptic attribute
     //
-    function startUpgradePoll(uint8 _galaxy, EclipticBase _proposal)
-        external
-        activePointVoter(_galaxy)
-    {
+    function startUpgradePoll(uint8 _galaxy, EclipticBase _proposal) external activePointVoter(_galaxy) {
         //  ensure that the upgrade target expects this contract as the source
         //
         require(_proposal.previousEcliptic() == address(this));
@@ -3426,10 +3047,7 @@ contract Ecliptic is EclipticBase, SupportsInterfaceWithLookup, ERC721Metadata {
     //    the _proposal argument is the keccak-256 hash of any arbitrary
     //    document or string of text
     //
-    function startDocumentPoll(uint8 _galaxy, bytes32 _proposal)
-        external
-        activePointVoter(_galaxy)
-    {
+    function startDocumentPoll(uint8 _galaxy, bytes32 _proposal) external activePointVoter(_galaxy) {
         polls.startDocumentPoll(_proposal);
     }
 

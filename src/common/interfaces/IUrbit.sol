@@ -2,15 +2,12 @@
 
 pragma solidity 0.8.10;
 
-interface IOwnable {
-    function renounceOwnership() external;
+import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import {IERC173} from "./IERC173.sol";
 
-    function transferOwnership(address _newOwner) external;
+interface IAzimuth is IERC173 {}
 
-    function owner() external returns (address);
-}
-
-interface IEcliptic {
+interface IEcliptic is IERC721 {
     function setManagementProxy(uint32 _point, address _manager) external;
 
     function setSpawnProxy(uint16 _prefix, address _spawnProxy) external;
@@ -35,11 +32,5 @@ interface IEcliptic {
         uint32 _point,
         address _target,
         bool _reset
-    ) external;
-
-    function setDnsDomains(
-        string memory _primary,
-        string memory _secondary,
-        string memory _tertiary
     ) external;
 }

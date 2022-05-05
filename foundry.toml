@@ -6,3 +6,4 @@ optimizer_runs = 500000
 out = 'out'
 src = 'src'
 test = 'test'
+gas_reports = ['*']
