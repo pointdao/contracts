@@ -30,15 +30,15 @@ contract PointTokenFacet is Modifiers {
     }
 
     function totalSupply() external view returns (uint256) {
-        return s.token.totalSupply;
+        return s.tokenTotalSupply;
     }
 
     function balanceOf(address account) external view returns (uint256) {
-        return s.token.balanceOf[account];
+        return s.tokenBalanceOf[account];
     }
 
     function allowance(address owner, address spender) external view returns (uint256) {
-        return s.token.allowance[owner][spender];
+        return s.tokenAllowance[owner][spender];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ contract PointTokenFacet is Modifiers {
     }
 
     function nonces(address owner) external view returns (uint256) {
-        return s.token.nonces[owner];
+        return s.tokenNonces[owner];
     }
 
     function DOMAIN_SEPARATOR() external view returns (bytes32) {
@@ -71,29 +71,29 @@ contract PointTokenFacet is Modifiers {
      * @dev Get the `pos`-th checkpoint for `account`.
      */
     function checkpoints(address account, uint32 pos) public view returns (Checkpoint memory) {
-        return s.token._checkpoints[account][pos];
+        return s.token_checkpoints[account][pos];
     }
 
     /**
      * @dev Get number of checkpoints for `account`.
      */
     function numCheckpoints(address account) public view returns (uint32) {
-        return SafeCast.toUint32(s.token._checkpoints[account].length);
+        return SafeCast.toUint32(s.token_checkpoints[account].length);
     }
 
     /**
      * @dev Get the address `account` is currently delegating to.
      */
     function delegates(address account) external view returns (address) {
-        return s.token._delegates[account];
+        return s.token_delegates[account];
     }
 
     /**
      * @dev Gets the current votes balance for `account`
      */
     function getVotes(address account) external view returns (uint256) {
-        uint256 pos = s.token._checkpoints[account].length;
-        return pos == 0 ? 0 : s.token._checkpoints[account][pos - 1].votes;
+        uint256 pos = s.token_checkpoints[account].length;
+        return pos == 0 ? 0 : s.token_checkpoints[account][pos - 1].votes;
     }
 
     /**
@@ -105,7 +105,7 @@ contract PointTokenFacet is Modifiers {
      */
     function getPastVotes(address account, uint256 blockNumber) external view returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(s.token._checkpoints[account], blockNumber);
+        return _checkpointsLookup(s.token_checkpoints[account], blockNumber);
     }
 
     /**
@@ -118,7 +118,7 @@ contract PointTokenFacet is Modifiers {
      */
     function getPastTotalSupply(uint256 blockNumber) external view returns (uint256) {
         require(blockNumber < block.number, "ERC20Votes: block not yet mined");
-        return _checkpointsLookup(s.token._totalSupplyCheckpoints, blockNumber);
+        return _checkpointsLookup(s.token_totalSupplyCheckpoints, blockNumber);
     }
 
     /**
