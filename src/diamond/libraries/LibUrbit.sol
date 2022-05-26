@@ -8,26 +8,26 @@ import {IEcliptic} from "../../common/interfaces/IUrbit.sol";
 
 library LibUrbit {
     function updateEcliptic(AppStorage storage s) internal {
-        require(address(s.urbit.azimuth) != address(0), "Azimuth address not set");
-        s.urbit.ecliptic = IEcliptic(s.urbit.azimuth.owner());
+        require(address(s.azimuth) != address(0), "Azimuth address not set");
+        s.ecliptic = IEcliptic(s.azimuth.owner());
     }
 
     function setManagementProxy(uint32 _point, address _manager) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.setManagementProxy(_point, _manager);
+        s.ecliptic.setManagementProxy(_point, _manager);
     }
 
     function setSpawnProxy(uint16 _prefix, address _spawnProxy) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.setSpawnProxy(_prefix, _spawnProxy);
+        s.ecliptic.setSpawnProxy(_prefix, _spawnProxy);
     }
 
     function setVotingProxy(uint8 _galaxy, address _voter) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.setVotingProxy(_galaxy, _voter);
+        s.ecliptic.setVotingProxy(_galaxy, _voter);
     }
 
     function castDocumentVote(
@@ -37,7 +37,7 @@ library LibUrbit {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.castDocumentVote(_galaxy, _proposal, _vote);
+        s.ecliptic.castDocumentVote(_galaxy, _proposal, _vote);
     }
 
     function castUpgradeVote(
@@ -47,7 +47,7 @@ library LibUrbit {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.castUpgradeVote(_galaxy, _proposal, _vote);
+        s.ecliptic.castUpgradeVote(_galaxy, _proposal, _vote);
     }
 
     function transferPoint(
@@ -57,6 +57,6 @@ library LibUrbit {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
         updateEcliptic(s);
-        s.urbit.ecliptic.transferPoint(_point, _target, _reset);
+        s.ecliptic.transferPoint(_point, _target, _reset);
     }
 }

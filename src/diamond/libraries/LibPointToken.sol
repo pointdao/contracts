@@ -18,28 +18,28 @@ library LibPointToken {
 
     function pause() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.token.paused = true;
+        s.tokenPaused = true;
         emit Paused(LibMeta.msgSender());
     }
 
     function unpause() internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        s.token.paused = false;
+        s.tokenPaused = false;
         emit Unpaused(LibMeta.msgSender());
     }
 
     function mint(address to, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.token.totalSupply += amount;
+        s.tokenTotalSupply += amount;
 
         unchecked {
-            s.token.balanceOf[to] += amount;
+            s.tokenBalanceOf[to] += amount;
         }
 
-        require(s.token.totalSupply <= s.token.maxSupply, "ERC20Votes: total supply risks overflowing votes");
+        require(s.tokenTotalSupply <= s.tokenMaxSupply, "ERC20Votes: total supply risks overflowing votes");
 
-        _writeCheckpoint(s.token._totalSupplyCheckpoints, _add, amount);
+        _writeCheckpoint(s.token_totalSupplyCheckpoints, _add, amount);
 
         emit Transfer(address(0), to, amount);
     }
@@ -47,13 +47,13 @@ library LibPointToken {
     function burn(address from, uint256 amount) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.token.balanceOf[from] -= amount;
+        s.tokenBalanceOf[from] -= amount;
 
         unchecked {
-            s.token.totalSupply -= amount;
+            s.tokenTotalSupply -= amount;
         }
 
-        _writeCheckpoint(s.token._totalSupplyCheckpoints, _subtract, amount);
+        _writeCheckpoint(s.token_totalSupplyCheckpoints, _subtract, amount);
 
         emit Transfer(from, address(0), amount);
     }
@@ -61,7 +61,7 @@ library LibPointToken {
     function approve(address spender, uint256 amount) internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.token.allowance[LibMeta.msgSender()][spender] = amount;
+        s.tokenAllowance[LibMeta.msgSender()][spender] = amount;
 
         emit Approval(LibMeta.msgSender(), spender, amount);
 
@@ -71,15 +71,15 @@ library LibPointToken {
     function transfer(address to, uint256 amount) internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        s.token.balanceOf[LibMeta.msgSender()] -= amount;
+        s.tokenBalanceOf[LibMeta.msgSender()] -= amount;
 
         unchecked {
-            s.token.balanceOf[to] += amount;
+            s.tokenBalanceOf[to] += amount;
         }
 
         emit Transfer(LibMeta.msgSender(), to, amount);
 
-        _moveVotingPower(s.token._delegates[LibMeta.msgSender()], s.token._delegates[to], amount);
+        _moveVotingPower(s.token_delegates[LibMeta.msgSender()], s.token_delegates[to], amount);
 
         return true;
     }
@@ -91,19 +91,19 @@ library LibPointToken {
     ) internal returns (bool) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 allowed = s.token.allowance[from][LibMeta.msgSender()];
+        uint256 allowed = s.tokenAllowance[from][LibMeta.msgSender()];
 
-        if (allowed != type(uint256).max) s.token.allowance[from][LibMeta.msgSender()] = allowed - amount;
+        if (allowed != type(uint256).max) s.tokenAllowance[from][LibMeta.msgSender()] = allowed - amount;
 
-        s.token.balanceOf[from] -= amount;
+        s.tokenBalanceOf[from] -= amount;
 
         unchecked {
-            s.token.balanceOf[to] += amount;
+            s.tokenBalanceOf[to] += amount;
         }
 
         emit Transfer(from, to, amount);
 
-        _moveVotingPower(s.token._delegates[from], s.token._delegates[to], amount);
+        _moveVotingPower(s.token_delegates[from], s.token_delegates[to], amount);
 
         return true;
     }
@@ -119,7 +119,7 @@ library LibPointToken {
     ) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        uint256 nonce = s.token.nonces[owner]++;
+        uint256 nonce = s.tokenNonces[owner]++;
 
         require(deadline >= block.timestamp, "PERMIT_DEADLINE_EXPIRED");
 
@@ -148,7 +148,7 @@ library LibPointToken {
 
             require(recoveredAddress != address(0) && recoveredAddress == owner, "INVALID_SIGNER");
 
-            s.token.allowance[recoveredAddress][spender] = value;
+            s.tokenAllowance[recoveredAddress][spender] = value;
         }
 
         emit Approval(owner, spender, value);
@@ -157,7 +157,7 @@ library LibPointToken {
     function DOMAIN_SEPARATOR() internal view returns (bytes32) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        return block.chainid == s.token.INITIAL_CHAIN_ID ? s.token.INITIAL_DOMAIN_SEPARATOR : computeDomainSeparator();
+        return block.chainid == s.INITIAL_CHAIN_ID ? s.INITIAL_DOMAIN_SEPARATOR : computeDomainSeparator();
     }
 
     function computeDomainSeparator() internal view returns (bytes32) {
@@ -167,7 +167,7 @@ library LibPointToken {
             keccak256(
                 abi.encode(
                     keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                    keccak256(bytes(s.token.name)),
+                    keccak256(bytes(s.tokenName)),
                     keccak256("1"),
                     block.chainid,
                     address(this)
@@ -178,16 +178,16 @@ library LibPointToken {
     function _useNonce(address owner) internal returns (uint256 current) {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        current = s.token.nonces[owner];
-        s.token.nonces[owner]++;
+        current = s.tokenNonces[owner];
+        s.tokenNonces[owner]++;
     }
 
     function delegate(address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        address currentDelegate = s.token._delegates[LibMeta.msgSender()];
-        uint256 delegatorBalance = s.token.balanceOf[LibMeta.msgSender()];
-        s.token._delegates[LibMeta.msgSender()] = delegatee;
+        address currentDelegate = s.token_delegates[LibMeta.msgSender()];
+        uint256 delegatorBalance = s.tokenBalanceOf[LibMeta.msgSender()];
+        s.token_delegates[LibMeta.msgSender()] = delegatee;
 
         emit DelegateChanged(LibMeta.msgSender(), currentDelegate, delegatee);
 
@@ -206,7 +206,7 @@ library LibPointToken {
 
         require(block.timestamp <= expiry, "ERC20Votes: signature expired");
         address signer = ECDSA.recover(
-            ECDSA.toTypedDataHash(DOMAIN_SEPARATOR(), keccak256(abi.encode(s.token._DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
+            ECDSA.toTypedDataHash(DOMAIN_SEPARATOR(), keccak256(abi.encode(s.token_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
             _v,
             _r,
             _s
@@ -217,9 +217,9 @@ library LibPointToken {
 
     function _delegate(address delegator, address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address currentDelegate = s.token._delegates[delegator];
-        uint256 delegatorBalance = s.token.balanceOf[delegator];
-        s.token._delegates[delegator] = delegatee;
+        address currentDelegate = s.token_delegates[delegator];
+        uint256 delegatorBalance = s.tokenBalanceOf[delegator];
+        s.token_delegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
@@ -234,12 +234,12 @@ library LibPointToken {
         AppStorage storage s = LibAppStorage.diamondStorage();
         if (src != dst && amount > 0) {
             if (src != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(s.token._checkpoints[src], _subtract, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(s.token_checkpoints[src], _subtract, amount);
                 emit DelegateVotesChanged(src, oldWeight, newWeight);
             }
 
             if (dst != address(0)) {
-                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(s.token._checkpoints[dst], _add, amount);
+                (uint256 oldWeight, uint256 newWeight) = _writeCheckpoint(s.token_checkpoints[dst], _add, amount);
                 emit DelegateVotesChanged(dst, oldWeight, newWeight);
             }
         }
