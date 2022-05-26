@@ -14,33 +14,6 @@ struct Checkpoint {
     uint224 votes;
 }
 
-struct TokenStorage {
-    string name;
-    string symbol;
-    uint8 decimals;
-    uint256 maxSupply;
-    uint256 totalSupply;
-    mapping(address => uint256) balanceOf;
-    mapping(address => mapping(address => uint256)) allowance;
-    uint256 INITIAL_CHAIN_ID;
-    bytes32 INITIAL_DOMAIN_SEPARATOR;
-    mapping(address => uint256) nonces;
-    bool paused;
-    bytes32 _DELEGATION_TYPEHASH;
-    mapping(address => address) _delegates;
-    mapping(address => Checkpoint[]) _checkpoints;
-    Checkpoint[] _totalSupplyCheckpoints;
-}
-
-// Urbit
-
-struct UrbitStorage {
-    IAzimuth azimuth;
-    IEcliptic ecliptic;
-}
-
-// GalaxyParty
-
 enum AskStatus {
     NONE,
     CREATED,
@@ -58,30 +31,37 @@ struct Ask {
     AskStatus status;
 }
 
-struct GalaxyPartyStorage {
-    uint16 askIds;
-    uint16 lastApprovedAskId;
-    mapping(uint16 => Ask) asks;
+struct AppStorage {
+    string tokenName;
+    string tokenSymbol;
+    uint8 tokenDecimals;
+    uint256 tokenMaxSupply;
+    uint256 tokenTotalSupply;
+    mapping(address => uint256) tokenBalanceOf;
+    mapping(address => mapping(address => uint256)) tokenAllowance;
+    uint256 INITIAL_CHAIN_ID;
+    bytes32 INITIAL_DOMAIN_SEPARATOR;
+    mapping(address => uint256) tokenNonces;
+    bool tokenPaused;
+    bytes32 token_DELEGATION_TYPEHASH;
+    mapping(address => address) token_delegates;
+    mapping(address => Checkpoint[]) token_checkpoints;
+    Checkpoint[] token_totalSupplyCheckpoints;
+    IAzimuth azimuth;
+    IEcliptic ecliptic;
+    uint16 galaxyPartyAskIds;
+    uint16 galaxyPartyLastApprovedAskId;
+    mapping(uint16 => Ask) galaxyPartyAsks;
     // ask id -> address -> total contributed
-    mapping(uint16 => mapping(address => uint256)) totalContributed;
+    mapping(uint16 => mapping(address => uint256)) galaxyPartyTotalContributed;
     // ask id -> whether user has claimed yet
-    mapping(uint16 => mapping(address => bool)) claimed;
-    uint16 TREASURY_POINT_INFLATION_BPS;
-    uint16 TREASURY_ETH_FEE_BPS;
-    uint32 TOKEN_SCALE;
-}
-
-struct GovernanceStorage {
+    mapping(uint16 => mapping(address => bool)) galaxyPartyClaimed;
+    uint16 galaxyParty_TREASURY_POINT_INFLATION_BPS;
+    uint16 galaxyParty_TREASURY_ETH_FEE_BPS;
+    uint32 galaxyParty_TOKEN_SCALE;
     address governance;
     address multisig;
     address manager;
-}
-
-struct AppStorage {
-    TokenStorage token;
-    UrbitStorage urbit;
-    GalaxyPartyStorage galaxyParty;
-    GovernanceStorage governance;
 }
 
 library LibAppStorage {
@@ -101,12 +81,12 @@ contract Modifiers {
 
     // Pausable
     modifier whenNotPaused() {
-        require(!s.token.paused, "Pausable: paused");
+        require(!s.tokenPaused, "Pausable: paused");
         _;
     }
 
     modifier whenPaused() {
-        require(s.token.paused, "Pausable: not paused");
+        require(s.tokenPaused, "Pausable: not paused");
         _;
     }
 
@@ -118,31 +98,25 @@ contract Modifiers {
 
     modifier onlyGovernance() {
         address sender = LibMeta.msgSender();
-        require(sender == s.governance.governance, "Only governance can call this function");
+        require(sender == s.governance, "Only governance can call this function");
         _;
     }
 
     modifier onlyGovernanceOrOwner() {
         address sender = LibMeta.msgSender();
-        require(sender == s.governance.governance || sender == LibDiamond.contractOwner(), "LibAppStorage: Do not have access");
+        require(sender == s.governance || sender == LibDiamond.contractOwner(), "LibAppStorage: Do not have access");
         _;
     }
 
     modifier onlyGovernanceOrOwnerOrMultisig() {
         address sender = LibMeta.msgSender();
-        require(
-            sender == s.governance.governance || sender == LibDiamond.contractOwner() || sender == s.governance.multisig,
-            "LibAppStorage: Do not have access"
-        );
+        require(sender == s.governance || sender == LibDiamond.contractOwner() || sender == s.multisig, "LibAppStorage: Do not have access");
         _;
     }
     modifier onlyGovernanceOrOwnerOrMultisigOrManager() {
         address sender = LibMeta.msgSender();
         require(
-            sender == s.governance.governance ||
-                sender == LibDiamond.contractOwner() ||
-                sender == s.governance.multisig ||
-                sender == s.governance.manager,
+            sender == s.governance || sender == LibDiamond.contractOwner() || sender == s.multisig || sender == s.manager,
             "LibAppStorage: Do not have access"
         );
         _;

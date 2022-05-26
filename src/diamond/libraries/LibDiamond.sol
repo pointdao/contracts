@@ -13,6 +13,9 @@ import {IERC173} from "../../common/interfaces/IERC173.sol";
 import {LibMeta} from "./LibMeta.sol";
 
 library LibDiamond {
+    uint256 private constant REENTRANCY_NOT_ENTERED = 1;
+    uint256 private constant REENTRANCY_ENTERED = 2;
+
     bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
 
     struct FacetAddressAndPosition {

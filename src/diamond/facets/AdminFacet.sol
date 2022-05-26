@@ -27,6 +27,6 @@ contract AdminFacet is Modifiers {
     }
 
     function setManager(address manager) public onlyGovernanceOrOwnerOrMultisig {
-        s.governance.manager = manager;
+        s.manager = manager;
     }
 }
