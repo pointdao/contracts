@@ -7,3 +7,8 @@ out = 'out'
 src = 'src'
 test = 'test'
 gas_reports = ['*']
+remappings = [
+  "forge-std=lib/forge-std/src/",
+  "@openzeppelin=lib/openzeppelin-contracts/",
+  "ds-test/=lib/ds-test/src/"
+]

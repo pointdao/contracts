@@ -3,9 +3,8 @@ pragma solidity 0.8.10;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {DSTest} from "../../lib/ds-test/src/test.sol";
-import {stdCheats} from "../../lib/forge-std/src/stdlib.sol";
-import {Vm} from "../../lib/forge-std/src/Vm.sol";
+import {DSTest} from "ds-test/test.sol";
+import {Test} from "forge-std/Test.sol";
 
 import {Deployer} from "../Deployer.sol";
 import {Diamond} from "../diamond/Diamond.sol";
@@ -18,9 +17,8 @@ import {MockTreasuryProxy} from "./utils/MockTreasuryProxy.sol";
 import {MockWETH} from "./utils/MockWETH.sol";
 import {IGalaxyParty} from "../diamond/interfaces/IGalaxyParty.sol";
 
-contract GalaxyPartyTest is DSTest, stdCheats {
+contract GalaxyPartyTest is DSTest, Test {
     // testing tools
-    Vm internal vm;
     MockWallet internal contributor;
     MockWallet internal galaxyOwner;
     MockWallet internal multisig;
@@ -53,7 +51,6 @@ contract GalaxyPartyTest is DSTest, stdCheats {
 
     function setUp() public {
         // setup testing tools
-        vm = Vm(HEVM_ADDRESS);
         weth = new MockWETH();
         contributor = new MockWallet();
         galaxyOwner = new MockWallet();

@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import "forge-std/Script.sol";
 import {Diamond} from "./diamond/Diamond.sol";
 import {AdminFacet} from "./diamond/facets/AdminFacet.sol";
 import {GalaxyHolderFacet} from "./diamond/facets/GalaxyHolderFacet.sol";
@@ -16,7 +17,7 @@ import {PointTreasury} from "./governance/PointTreasury.sol";
 import {Migration0Init} from "./diamond/migrations/Migration0Init.sol";
 
 /* Deploys entire protocol atomically */
-contract Deployer {
+contract Deployer is Script {
     Diamond public diamond;
     GalaxyPartyFacet public galaxyParty;
     PointTokenFacet public pointToken;
@@ -27,12 +28,14 @@ contract Deployer {
     PointGovernor public pointGovernor;
     PointTreasury public pointTreasury;
 
-    constructor(
-        address azimuth,
-        address multisig,
-        address weth
-    ) {
+    address constant azimuth = 0x223c067F8CF28ae173EE5CafEa60cA44C335fecB;
+    address private multisig = 0x691dA55929c47244413d47e82c204BDA834Ee343;
+    address private weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+    function run() external {
+        vm.startBroadcast();
         diamond = new Diamond(address(this));
+
         IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
 
         galaxyParty = new GalaxyPartyFacet();
@@ -40,6 +43,8 @@ contract Deployer {
         galaxyHolder = new GalaxyHolderFacet();
         admin = new AdminFacet();
         migration = new Migration0Init();
+
+        vm.stopBroadcast();
 
         bytes4[] memory galaxyPartySelectors = new bytes4[](6);
         galaxyPartySelectors[0] = GalaxyPartyFacet.createAsk.selector;
@@ -95,8 +100,10 @@ contract Deployer {
 
         // deploy governance
         address[] memory empty = new address[](0);
+        vm.startBroadcast();
         pointTreasury = new PointTreasury(86400, empty, empty, weth);
         pointGovernor = new PointGovernor(IVotes(address(diamond)), pointTreasury);
+        vm.stopBroadcast();
 
         // governor can propose, execute and cancel proposals
         pointTreasury.grantRole(pointTreasury.PROPOSER_ROLE(), address(pointGovernor));
