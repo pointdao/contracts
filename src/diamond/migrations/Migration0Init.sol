@@ -17,7 +17,11 @@ import {IERC173} from "../../common/interfaces/IERC173.sol";
 contract Migration0Init {
     AppStorage internal s;
 
-    function init(address azimuth, address multisig) external {
+    function init(
+        address azimuth,
+        address multisig,
+        address governance
+    ) external {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
         s.multisig = multisig;
@@ -44,9 +48,7 @@ contract Migration0Init {
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
         ds.supportedInterfaces[type(IERC20).interfaceId] = true;
-    }
 
-    function initGovernance(address pointTreasury) external {
-        s.governance = pointTreasury;
+        s.governance = governance;
     }
 }

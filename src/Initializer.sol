@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Diamond} from "./diamond/Diamond.sol";
 import {AdminFacet} from "./diamond/facets/AdminFacet.sol";
 import {GalaxyHolderFacet} from "./diamond/facets/GalaxyHolderFacet.sol";
@@ -15,8 +16,7 @@ import {PointGovernor} from "./governance/PointGovernor.sol";
 import {PointTreasury} from "./governance/PointTreasury.sol";
 import {Migration0Init} from "./diamond/migrations/Migration0Init.sol";
 
-/* Deploys entire protocol atomically */
-contract Deployer {
+contract Initializer is Ownable {
     Diamond public diamond;
     GalaxyPartyFacet public galaxyParty;
     PointTokenFacet public pointToken;
@@ -27,19 +27,35 @@ contract Deployer {
     PointGovernor public pointGovernor;
     PointTreasury public pointTreasury;
 
-    constructor(
-        address azimuth,
-        address multisig,
-        address weth
-    ) {
-        diamond = new Diamond(address(this));
-        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
+    address public azimuth;
+    address public multisig;
 
-        galaxyParty = new GalaxyPartyFacet();
-        pointToken = new PointTokenFacet();
-        galaxyHolder = new GalaxyHolderFacet();
-        admin = new AdminFacet();
-        migration = new Migration0Init();
+    function setAddresses(
+        Diamond _diamond,
+        GalaxyPartyFacet _galaxyParty,
+        PointTokenFacet _pointToken,
+        AdminFacet _admin,
+        GalaxyHolderFacet _galaxyHolder,
+        Migration0Init _migration,
+        PointGovernor _pointGovernor,
+        PointTreasury _pointTreasury,
+        address _multisig,
+        address _azimuth
+    ) external onlyOwner {
+        diamond = _diamond;
+        galaxyParty = _galaxyParty;
+        pointToken = _pointToken;
+        admin = _admin;
+        galaxyHolder = _galaxyHolder;
+        migration = _migration;
+        pointGovernor = _pointGovernor;
+        pointTreasury = _pointTreasury;
+        multisig = _multisig;
+        azimuth = _azimuth;
+    }
+
+    function run() external onlyOwner {
+        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
 
         bytes4[] memory galaxyPartySelectors = new bytes4[](6);
         galaxyPartySelectors[0] = GalaxyPartyFacet.createAsk.selector;
@@ -90,13 +106,8 @@ contract Deployer {
         IDiamondCut(address(diamond)).diamondCut(
             diamondCut,
             address(migration),
-            abi.encodeWithSelector(Migration0Init.init.selector, azimuth, multisig)
+            abi.encodeWithSelector(Migration0Init.init.selector, azimuth, multisig, address(pointTreasury))
         );
-
-        // deploy governance
-        address[] memory empty = new address[](0);
-        pointTreasury = new PointTreasury(86400, empty, empty, weth);
-        pointGovernor = new PointGovernor(IVotes(address(diamond)), pointTreasury);
 
         // governor can propose, execute and cancel proposals
         pointTreasury.grantRole(pointTreasury.PROPOSER_ROLE(), address(pointGovernor));
@@ -110,12 +121,6 @@ contract Deployer {
         // revoke unnecessary admin roles
         pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(pointTreasury));
         pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(this));
-
-        // deploy mint treasury supply
-        IAdmin(address(diamond)).runMigration(
-            address(migration),
-            abi.encodeWithSelector(Migration0Init.initGovernance.selector, address(pointTreasury))
-        );
 
         IERC173(address(diamond)).transferOwnership(multisig);
     }
