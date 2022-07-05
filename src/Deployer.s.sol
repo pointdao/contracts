@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
-import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import "forge-std/Script.sol";
+import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Diamond} from "./diamond/Diamond.sol";
 import {AdminFacet} from "./diamond/facets/AdminFacet.sol";
 import {GalaxyHolderFacet} from "./diamond/facets/GalaxyHolderFacet.sol";
@@ -15,115 +16,91 @@ import {IERC173} from "./common/interfaces/IERC173.sol";
 import {PointGovernor} from "./governance/PointGovernor.sol";
 import {PointTreasury} from "./governance/PointTreasury.sol";
 import {Migration0Init} from "./diamond/migrations/Migration0Init.sol";
+import {Initializer} from "./Initializer.sol";
+import {IOwnable} from "./diamond/interfaces/IOwnable.sol";
 
-/* Deploys entire protocol atomically */
-contract Deployer is Script {
+/* Deploys entire protocol - This is a script, it is not meant to be deployed */
+contract Deployer is Script, Ownable {
     Diamond public diamond;
     GalaxyPartyFacet public galaxyParty;
     PointTokenFacet public pointToken;
     AdminFacet public admin;
     GalaxyHolderFacet public galaxyHolder;
     Migration0Init public migration;
+    Initializer public initializer;
 
     PointGovernor public pointGovernor;
     PointTreasury public pointTreasury;
 
-    address constant azimuth = 0x223c067F8CF28ae173EE5CafEa60cA44C335fecB;
-    address private multisig = 0x691dA55929c47244413d47e82c204BDA834Ee343;
-    address private weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    // rinkeby addrs
+    address private constant azimuth = 0xC6Fe03489FAd98B949b6a8b37229974908dD9390;
+    address private constant multisig = 0xF87805a8cB1f7C9f061c89243D11a427358b6df7;
+    address private constant weth = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
+    // // mainnet addrs
+    // address private constant azimuth = 0x223c067F8CF28ae173EE5CafEa60cA44C335fecB;
+    // address private constant multisig = 0x691dA55929c47244413d47e82c204BDA834Ee343;
+    // address private constant weth = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+    // only for usage with `forge script`
     function run() external {
         vm.startBroadcast();
-        diamond = new Diamond(address(this));
 
-        IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
-
+        diamond = new Diamond(msg.sender);
         galaxyParty = new GalaxyPartyFacet();
         pointToken = new PointTokenFacet();
         galaxyHolder = new GalaxyHolderFacet();
         admin = new AdminFacet();
         migration = new Migration0Init();
-
-        vm.stopBroadcast();
-
-        bytes4[] memory galaxyPartySelectors = new bytes4[](6);
-        galaxyPartySelectors[0] = GalaxyPartyFacet.createAsk.selector;
-        galaxyPartySelectors[1] = GalaxyPartyFacet.cancelAsk.selector;
-        galaxyPartySelectors[2] = GalaxyPartyFacet.approveAsk.selector;
-        galaxyPartySelectors[3] = GalaxyPartyFacet.contribute.selector;
-        galaxyPartySelectors[4] = GalaxyPartyFacet.settleAsk.selector;
-        galaxyPartySelectors[5] = GalaxyPartyFacet.claim.selector;
-        diamondCut[0] = IDiamondCut.FacetCut(address(galaxyParty), IDiamondCut.FacetCutAction.Add, galaxyPartySelectors);
-
-        bytes4[] memory pointTokenSelectors = new bytes4[](17);
-        pointTokenSelectors[0] = PointTokenFacet.approve.selector;
-        pointTokenSelectors[1] = PointTokenFacet.transfer.selector;
-        pointTokenSelectors[2] = PointTokenFacet.transferFrom.selector;
-        pointTokenSelectors[3] = PointTokenFacet.totalSupply.selector;
-        pointTokenSelectors[4] = PointTokenFacet.balanceOf.selector;
-        pointTokenSelectors[5] = PointTokenFacet.allowance.selector;
-        pointTokenSelectors[6] = PointTokenFacet.permit.selector;
-        pointTokenSelectors[7] = PointTokenFacet.nonces.selector;
-        pointTokenSelectors[8] = PointTokenFacet.DOMAIN_SEPARATOR.selector;
-        pointTokenSelectors[9] = PointTokenFacet.checkpoints.selector;
-        pointTokenSelectors[10] = PointTokenFacet.numCheckpoints.selector;
-        pointTokenSelectors[11] = PointTokenFacet.delegates.selector;
-        pointTokenSelectors[12] = PointTokenFacet.getVotes.selector;
-        pointTokenSelectors[13] = PointTokenFacet.getPastVotes.selector;
-        pointTokenSelectors[14] = PointTokenFacet.getPastTotalSupply.selector;
-        pointTokenSelectors[15] = PointTokenFacet.delegate.selector;
-        pointTokenSelectors[16] = PointTokenFacet.delegateBySig.selector;
-        diamondCut[1] = IDiamondCut.FacetCut(address(pointToken), IDiamondCut.FacetCutAction.Add, pointTokenSelectors);
-
-        bytes4[] memory galaxyHolderSelectors = new bytes4[](6);
-        galaxyHolderSelectors[0] = GalaxyHolderFacet.setManagementProxy.selector;
-        galaxyHolderSelectors[1] = GalaxyHolderFacet.setSpawnProxy.selector;
-        galaxyHolderSelectors[2] = GalaxyHolderFacet.setVotingProxy.selector;
-        galaxyHolderSelectors[3] = GalaxyHolderFacet.castDocumentVote.selector;
-        galaxyHolderSelectors[4] = GalaxyHolderFacet.castUpgradeVote.selector;
-        galaxyHolderSelectors[5] = GalaxyHolderFacet.onERC721Received.selector;
-        diamondCut[2] = IDiamondCut.FacetCut(address(galaxyHolder), IDiamondCut.FacetCutAction.Add, galaxyHolderSelectors);
-
-        bytes4[] memory adminSelectors = new bytes4[](5);
-        adminSelectors[0] = AdminFacet.updateEcliptic.selector;
-        adminSelectors[1] = AdminFacet.runMigration.selector;
-        adminSelectors[2] = AdminFacet.pauseTokenTransfers.selector;
-        adminSelectors[3] = AdminFacet.unpauseTokenTransfers.selector;
-        adminSelectors[4] = AdminFacet.setManager.selector;
-        diamondCut[3] = IDiamondCut.FacetCut(address(admin), IDiamondCut.FacetCutAction.Add, adminSelectors);
-
-        IDiamondCut(address(diamond)).diamondCut(
-            diamondCut,
-            address(migration),
-            abi.encodeWithSelector(Migration0Init.init.selector, azimuth, multisig)
-        );
+        initializer = new Initializer();
 
         // deploy governance
         address[] memory empty = new address[](0);
-        vm.startBroadcast();
         pointTreasury = new PointTreasury(86400, empty, empty, weth);
         pointGovernor = new PointGovernor(IVotes(address(diamond)), pointTreasury);
+        pointTreasury.grantRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(initializer));
+        pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), msg.sender);
+
+        // initialize protocol
+        IERC173(address(diamond)).transferOwnership(address(initializer));
+        initializer.setAddresses(diamond, galaxyParty, pointToken, admin, galaxyHolder, migration, pointGovernor, pointTreasury, multisig, azimuth);
+
+        initializer.run();
+
         vm.stopBroadcast();
+    }
 
-        // governor can propose, execute and cancel proposals
-        pointTreasury.grantRole(pointTreasury.PROPOSER_ROLE(), address(pointGovernor));
-        pointTreasury.grantRole(pointTreasury.EXECUTOR_ROLE(), address(pointGovernor));
-        pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(pointGovernor));
+    // only for local test setup
+    function runMockSetup(address testAzimuth, address testMultisig) public {
+        diamond = new Diamond(address(this));
+        galaxyParty = new GalaxyPartyFacet();
+        pointToken = new PointTokenFacet();
+        galaxyHolder = new GalaxyHolderFacet();
+        admin = new AdminFacet();
+        migration = new Migration0Init();
+        initializer = new Initializer();
 
-        // multisig can cancel proposals and grant/revoke roles
-        pointTreasury.grantRole(pointTreasury.CANCELLER_ROLE(), address(multisig));
-        pointTreasury.grantRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(multisig));
-
-        // revoke unnecessary admin roles
-        pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(pointTreasury));
+        // deploy governance
+        address[] memory empty = new address[](0);
+        pointTreasury = new PointTreasury(86400, empty, empty, weth);
+        pointGovernor = new PointGovernor(IVotes(address(diamond)), pointTreasury);
+        pointTreasury.grantRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(initializer));
         pointTreasury.revokeRole(pointTreasury.TIMELOCK_ADMIN_ROLE(), address(this));
 
-        // deploy mint treasury supply
-        IAdmin(address(diamond)).runMigration(
-            address(migration),
-            abi.encodeWithSelector(Migration0Init.initGovernance.selector, address(pointTreasury))
+        // initialize protocol
+        IERC173(address(diamond)).transferOwnership(address(initializer));
+        initializer.setAddresses(
+            diamond,
+            galaxyParty,
+            pointToken,
+            admin,
+            galaxyHolder,
+            migration,
+            pointGovernor,
+            pointTreasury,
+            testMultisig,
+            testAzimuth
         );
-
-        IERC173(address(diamond)).transferOwnership(multisig);
+        initializer.run();
     }
 }

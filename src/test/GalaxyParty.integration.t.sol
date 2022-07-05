@@ -6,16 +6,17 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {DSTest} from "ds-test/test.sol";
 import {Test} from "forge-std/Test.sol";
 
-import {Deployer} from "../Deployer.sol";
+import {Deployer} from "../Deployer.s.sol";
 import {Diamond} from "../diamond/Diamond.sol";
 import {PointGovernor} from "../governance/PointGovernor.sol";
 import {PointTreasury} from "../governance/PointTreasury.sol";
 import {IERC173} from "../common/interfaces/IERC173.sol";
 import {IEcliptic, IAzimuth} from "../common/interfaces/IUrbit.sol";
 import {MockWallet} from "./utils/MockWallet.sol";
-import {MockTreasuryProxy} from "./utils/MockTreasuryProxy.sol";
 import {MockWETH} from "./utils/MockWETH.sol";
 import {IGalaxyParty} from "../diamond/interfaces/IGalaxyParty.sol";
+import {Deployer} from "../Deployer.s.sol";
+import {DeployUrbit} from "./utils/urbit/DeployUrbit.s.sol";
 
 contract GalaxyPartyTest is DSTest, Test {
     // testing tools
@@ -57,13 +58,12 @@ contract GalaxyPartyTest is DSTest, Test {
         multisig = new MockWallet();
 
         // setup urbit
-        azimuth = deployCode("Urbit.sol:Azimuth");
-        polls = deployCode("Urbit.sol:Polls", abi.encode(uint256(2592000), uint256(2592000)));
-        claims = deployCode("Urbit.sol:Claims", abi.encode(azimuth));
-        address treasuryProxy = address(new MockTreasuryProxy());
-        ecliptic = deployCode("Urbit.sol:Ecliptic", abi.encode(address(0), azimuth, polls, claims, treasuryProxy));
-        IERC173(azimuth).transferOwnership(ecliptic);
-        IERC173(polls).transferOwnership(ecliptic);
+        DeployUrbit urbitDeployer = new DeployUrbit();
+        urbitDeployer.run();
+        azimuth = urbitDeployer.azimuth();
+        polls = urbitDeployer.polls();
+        claims = urbitDeployer.claims();
+        ecliptic = urbitDeployer.ecliptic();
         IEcliptic(ecliptic).createGalaxy(0, address(this));
         IEcliptic(ecliptic).createGalaxy(1, address(this));
         IEcliptic(ecliptic).createGalaxy(2, address(this));
@@ -72,7 +72,8 @@ contract GalaxyPartyTest is DSTest, Test {
         IERC721(ecliptic).safeTransferFrom(address(this), address(galaxyOwner), 2);
 
         // deploy governance and protocol
-        Deployer d = new Deployer(azimuth, address(multisig), address(weth));
+        Deployer d = new Deployer();
+        d.runMockSetup(address(azimuth), address(multisig));
         diamond = d.diamond();
         pointGovernor = d.pointGovernor();
         pointTreasury = d.pointTreasury();
@@ -86,11 +87,9 @@ contract GalaxyPartyTest is DSTest, Test {
         emit AskCreated(1, address(galaxyOwner), 0, 999 * 10**18, 1_000 * 10**18);
         IGalaxyParty(address(diamond)).createAsk(0, 999 * 10**18, 1_000 * 10**18); // create ask valuing galaxy at 1000 ETH and asking for 1000 POINT, leaving 999 ETH unallocated
         vm.stopPrank();
-
         // governance approves ask
         vm.prank(address(pointTreasury));
         IGalaxyParty(address(diamond)).approveAsk(1);
-
         // contributor contributes ETH to ask and settles ask
         vm.deal(address(contributor), 999 * 10**18);
         vm.startPrank(address(contributor));
@@ -106,7 +105,6 @@ contract GalaxyPartyTest is DSTest, Test {
         assertEq(IERC20(address(diamond)).balanceOf(address(galaxyOwner)), 1_000 * 10**18); // galaxyOwner gets correct amount of POINT
         assertEq(IERC20(address(diamond)).balanceOf(address(pointTreasury)), 30_000 * 10**18);
         assertEq(IERC20(address(diamond)).totalSupply(), 31_000 * 10**18);
-
         // contributor claims POINT
         vm.expectEmit(true, false, false, true);
         emit Claimed(address(contributor), 999_000 * 10**18, 0);
@@ -114,7 +112,6 @@ contract GalaxyPartyTest is DSTest, Test {
         vm.stopPrank();
         assert(IERC20(address(diamond)).totalSupply() == 1_030_000 * 10**18);
         assertEq(IERC20(address(diamond)).balanceOf(address(contributor)), 999_000 * 10**18);
-
         // galaxy owner creates another ask and cancels it
         vm.startPrank(address(galaxyOwner));
         vm.expectEmit(true, true, false, false);
@@ -124,14 +121,12 @@ contract GalaxyPartyTest is DSTest, Test {
         emit AskCanceled(2);
         IGalaxyParty(address(diamond)).cancelAsk(2);
         vm.stopPrank();
-
         // someone tries to contribute to ended ask
         vm.deal(address(contributor), 1 * 10**18);
         vm.startPrank(address(contributor));
         vm.expectRevert("ask must be in approved state");
         IGalaxyParty(address(diamond)).contribute{value: 1 * 10**18}(1);
         vm.stopPrank();
-
         // someone tries to contribute to canceled ask
         vm.startPrank(address(contributor));
         vm.expectRevert("ask must be in approved state");
@@ -147,11 +142,9 @@ contract GalaxyPartyTest is DSTest, Test {
         emit AskCreated(1, address(galaxyOwner), 0, 0, 1_000_000 * 10**18);
         IGalaxyParty(address(diamond)).createAsk(0, 0 * 10**18, 1_000_000 * 10**18); // create ask valuing galaxy at 1000 ETH and asking for 1000 POINT, leaving 999 ETH unallocated
         vm.stopPrank();
-
         // governance approves ask
         vm.prank(address(pointTreasury));
         IGalaxyParty(address(diamond)).approveAsk(1);
-
         // contributor contributes ETH to ask and settles ask
         vm.deal(address(contributor), 1);
         vm.startPrank(address(contributor));
