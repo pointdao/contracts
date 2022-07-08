@@ -13,18 +13,6 @@ contract PointTokenFacet is Modifiers {
                                ERC20
     //////////////////////////////////////////////////////////////*/
 
-    function name() public pure returns (string memory) {
-        return "Point DAO";
-    }
-
-    function symbol() public pure returns (string memory) {
-        return "POINT";
-    }
-
-    function decimals() public pure returns (uint8) {
-        return 18;
-    }
-
     function approve(address spender, uint256 amount) public returns (bool) {
         return LibPointToken.approve(spender, amount);
     }
