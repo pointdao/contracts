@@ -13,15 +13,15 @@ contract PointTokenFacet is Modifiers {
                                ERC20
     //////////////////////////////////////////////////////////////*/
 
-    function name() public pure returns (string memory) {
+    function name() public view returns (string memory) {
         return "Point DAO";
     }
 
-    function symbol() public pure returns (string memory) {
+    function symbol() public view returns (string memory) {
         return "POINT";
     }
 
-    function decimals() public pure returns (uint8) {
+    function decimals() public view returns (uint8) {
         return 18;
     }
 

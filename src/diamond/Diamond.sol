@@ -18,6 +18,18 @@ contract Diamond {
         LibDiamond.addDiamondFunctions(address(new DiamondCutFacet()), address(new DiamondLoupeFacet()), address(new OwnableFacet()));
     }
 
+    function name() public view returns (string memory) {
+        return "Point DAO";
+    }
+
+    function symbol() public view returns (string memory) {
+        return "POINT";
+    }
+
+    function decimals() public view returns (uint8) {
+        return 18;
+    }
+
     // Find facet for function that is called and execute the
     // function if a facet is found and return any value.
     fallback() external payable {
