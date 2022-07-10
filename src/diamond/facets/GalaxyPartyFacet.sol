@@ -9,7 +9,9 @@ import {LibPointToken} from "../libraries/LibPointToken.sol";
 
 contract GalaxyPartyFacet is Modifiers {
     event AskCreated(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
+    event AskPriceUpdated(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
     event AskCanceled(uint16 askId);
+    event AskApproved(uint16 askId);
     event Claimed(address indexed contributor, uint256 tokenAmount, uint256 ethAmount);
     event Contributed(address indexed contributor, uint16 askId, uint256 amount, uint256 remainingUnallocatedEth);
     event AskSettled(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
@@ -26,6 +28,20 @@ contract GalaxyPartyFacet is Modifiers {
         s.galaxyPartyAskIds++;
         s.galaxyPartyAsks[s.galaxyPartyAskIds] = Ask(LibMeta.msgSender(), _ethAmount, _pointAmount, 0, _point, AskStatus.CREATED);
         emit AskCreated(s.galaxyPartyAskIds, LibMeta.msgSender(), _point, _ethAmount, _pointAmount);
+    }
+
+    function updateAskPrice(
+        uint16 _askId,
+        uint256 _ethAmount,
+        uint256 _pointAmount
+    ) public {
+        require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
+        require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
+        require(LibMeta.msgSender() == s.galaxyPartyAsks[_askId].owner, "only ask creator");
+
+        s.galaxyPartyAsks[_askId].amount = _ethAmount;
+        s.galaxyPartyAsks[_askId].pointAmount = _pointAmount;
+        emit AskPriceUpdated(_askId, s.galaxyPartyAsks[_askId].owner, s.galaxyPartyAsks[_askId].point, _ethAmount, _pointAmount);
     }
 
     function cancelAsk(uint16 _askId) public {
@@ -46,15 +62,15 @@ contract GalaxyPartyFacet is Modifiers {
     function approveAsk(uint16 _askId) public onlyGovernanceOrOwnerOrMultisig {
         LibUrbit.updateEcliptic(s);
         require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
+        AskStatus lastApprovedAskStatus = s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status;
         require(
-            s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.NONE ||
-                s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.CANCELED ||
-                s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.ENDED,
+            lastApprovedAskStatus == AskStatus.NONE || lastApprovedAskStatus == AskStatus.CANCELED || lastApprovedAskStatus == AskStatus.ENDED,
             "there is already an active ask."
         );
         require(s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].point)), "ask creator is no longer owner");
         s.galaxyPartyAsks[_askId].status = AskStatus.APPROVED;
         s.galaxyPartyLastApprovedAskId = _askId;
+        emit AskApproved(_askId);
     }
 
     function contribute(uint16 _askId) public payable {
