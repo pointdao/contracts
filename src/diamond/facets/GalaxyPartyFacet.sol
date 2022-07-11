@@ -8,12 +8,14 @@ import {LibUrbit} from "../libraries/LibUrbit.sol";
 import {LibPointToken} from "../libraries/LibPointToken.sol";
 
 contract GalaxyPartyFacet is Modifiers {
-    event AskCreated(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
-    event AskCanceled(uint16 askId);
-    event Claimed(address indexed contributor, uint256 tokenAmount, uint256 ethAmount);
-    event Contributed(address indexed contributor, uint16 askId, uint256 amount, uint256 remainingUnallocatedEth);
-    event AskSettled(uint16 askId, address owner, uint8 point, uint256 amount, uint256 pointAmount);
-    event ETHTransferFailed(address intended, uint256 amount);
+    event AskCreated(uint16 indexed askId, Ask ask);
+    event AskPriceUpdated(uint16 indexed askId, Ask ask, uint256 prevAmount, uint256 prevPointAmount);
+    event AskCanceled(uint16 indexed askId, Ask ask, address canceler, AskStatus prevStatus);
+    event AskApproved(uint16 indexed askId, Ask ask);
+    event Claimed(uint16 indexed askId, address indexed contributor, uint256 pointAmount, uint256 ethAmount);
+    event Contributed(uint16 indexed askId, address indexed contributor, Ask ask, uint256 amount);
+    event AskSettled(uint16 indexed askId, Ask ask);
+    event ETHTransferFailed(uint16 indexed askId, address intended, uint256 amount);
 
     function createAsk(
         uint8 _point,
@@ -25,7 +27,22 @@ contract GalaxyPartyFacet is Modifiers {
         require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
         s.galaxyPartyAskIds++;
         s.galaxyPartyAsks[s.galaxyPartyAskIds] = Ask(LibMeta.msgSender(), _ethAmount, _pointAmount, 0, _point, AskStatus.CREATED);
-        emit AskCreated(s.galaxyPartyAskIds, LibMeta.msgSender(), _point, _ethAmount, _pointAmount);
+        emit AskCreated(s.galaxyPartyAskIds, s.galaxyPartyAsks[s.galaxyPartyAskIds]);
+    }
+
+    function updateAskPrice(
+        uint16 _askId,
+        uint256 _ethAmount,
+        uint256 _pointAmount
+    ) public {
+        require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
+        require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
+        require(LibMeta.msgSender() == s.galaxyPartyAsks[_askId].owner, "only ask creator");
+        uint256 prevAmount = s.galaxyPartyAsks[_askId].amount;
+        uint256 prevPointAmount = s.galaxyPartyAsks[_askId].pointAmount;
+        s.galaxyPartyAsks[_askId].amount = _ethAmount;
+        s.galaxyPartyAsks[_askId].pointAmount = _pointAmount;
+        emit AskPriceUpdated(_askId, s.galaxyPartyAsks[_askId], prevAmount, prevPointAmount);
     }
 
     function cancelAsk(uint16 _askId) public {
@@ -39,22 +56,23 @@ contract GalaxyPartyFacet is Modifiers {
             s.galaxyPartyAsks[_askId].status == AskStatus.CREATED || s.galaxyPartyAsks[_askId].status == AskStatus.APPROVED,
             "ask must be created or approved"
         );
+        AskStatus prevStatus = s.galaxyPartyAsks[_askId].status;
         s.galaxyPartyAsks[_askId].status = AskStatus.CANCELED;
-        emit AskCanceled(_askId);
+        emit AskCanceled(_askId, s.galaxyPartyAsks[_askId], msg.sender, prevStatus);
     }
 
     function approveAsk(uint16 _askId) public onlyGovernanceOrOwnerOrMultisig {
         LibUrbit.updateEcliptic(s);
         require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
+        AskStatus lastApprovedAskStatus = s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status;
         require(
-            s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.NONE ||
-                s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.CANCELED ||
-                s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status == AskStatus.ENDED,
+            lastApprovedAskStatus == AskStatus.NONE || lastApprovedAskStatus == AskStatus.CANCELED || lastApprovedAskStatus == AskStatus.ENDED,
             "there is already an active ask."
         );
         require(s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].point)), "ask creator is no longer owner");
         s.galaxyPartyAsks[_askId].status = AskStatus.APPROVED;
         s.galaxyPartyLastApprovedAskId = _askId;
+        emit AskApproved(_askId, s.galaxyPartyAsks[_askId]);
     }
 
     function contribute(uint16 _askId) public payable {
@@ -68,7 +86,7 @@ contract GalaxyPartyFacet is Modifiers {
         address _contributor = LibMeta.msgSender();
         s.galaxyPartyTotalContributed[_askId][_contributor] += _amount;
         s.galaxyPartyAsks[_askId].totalContributedToParty += _amount;
-        emit Contributed(_contributor, _askId, _amount, s.galaxyPartyAsks[_askId].amount - s.galaxyPartyAsks[_askId].totalContributedToParty);
+        emit Contributed(_askId, _contributor, s.galaxyPartyAsks[_askId], _amount);
     }
 
     function settleAsk(uint16 _askId) public {
@@ -87,17 +105,16 @@ contract GalaxyPartyFacet is Modifiers {
         if (ethRaised > 0) {
             uint256 treasuryEthFee = (ethRaised * s.galaxyParty_TREASURY_ETH_FEE_BPS) / 10_000;
             (bool feeSuccess, ) = s.governance.call{value: treasuryEthFee}("");
-            if (!feeSuccess) {
-                emit ETHTransferFailed(s.governance, treasuryEthFee);
+            if (feeSuccess) {
+                ethRaised -= treasuryEthFee;
             }
-            ethRaised -= treasuryEthFee;
         }
 
         (bool success, ) = s.galaxyPartyAsks[_askId].owner.call{value: ethRaised}("");
         require(success, "wallet failed to receive");
         LibPointToken.mint(s.galaxyPartyAsks[_askId].owner, s.galaxyPartyAsks[_askId].pointAmount);
 
-        emit AskSettled(_askId, s.galaxyPartyAsks[_askId].owner, s.galaxyPartyAsks[_askId].point, ethRaised, s.galaxyPartyAsks[_askId].pointAmount);
+        emit AskSettled(_askId, s.galaxyPartyAsks[_askId]);
     }
 
     function claim(uint16 _askId) public {
@@ -109,13 +126,13 @@ contract GalaxyPartyFacet is Modifiers {
         s.galaxyPartyClaimed[_askId][sender] = true;
         if (s.galaxyPartyAsks[_askId].status == AskStatus.ENDED) {
             LibPointToken.mint(sender, amount * s.galaxyParty_TOKEN_SCALE);
-            emit Claimed(sender, amount * s.galaxyParty_TOKEN_SCALE, 0);
+            emit Claimed(_askId, sender, amount * s.galaxyParty_TOKEN_SCALE, 0);
         } else if (s.galaxyPartyAsks[_askId].status == AskStatus.CANCELED) {
             (bool success, ) = sender.call{value: amount}("");
             if (!success) {
-                emit ETHTransferFailed(sender, amount);
+                emit ETHTransferFailed(_askId, sender, amount);
             } else {
-                emit Claimed(sender, 0, amount);
+                emit Claimed(_askId, sender, 0, amount);
             }
         }
     }

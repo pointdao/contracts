@@ -5,7 +5,7 @@
   "scripts": {
     "test": "forge test",
     "build": "forge build && yarn typechain",
-    "clean": "forge clean && rm -rf ./out",
+    "clean": "forge clean",
     "prepublishOnly": "rm -rf ./out && forge clean && forge build && yarn typechain",
     "typechain": "typechain --target=ethers-v5 'out/*/*.json' --out-dir out/typechain"
   },
