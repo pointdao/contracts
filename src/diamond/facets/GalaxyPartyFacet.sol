@@ -17,6 +17,14 @@ contract GalaxyPartyFacet is Modifiers {
     event AskSettled(uint16 indexed askId, Ask ask);
     event ETHTransferFailed(uint16 indexed askId, address intended, uint256 amount);
 
+    function lastAskId() public view returns (uint16) {
+        return s.galaxyPartyAskIds;
+    }
+
+    function getAsk(uint16 _askId) public view returns (Ask memory) {
+        return s.galaxyPartyAsks[_askId];
+    }
+
     function createAsk(
         uint8 _point,
         uint256 _ethAmount,
