@@ -57,13 +57,14 @@ contract Initializer is Ownable {
     function run() external onlyOwner {
         IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
 
-        bytes4[] memory galaxyPartySelectors = new bytes4[](6);
+        bytes4[] memory galaxyPartySelectors = new bytes4[](7);
         galaxyPartySelectors[0] = GalaxyPartyFacet.createAsk.selector;
         galaxyPartySelectors[1] = GalaxyPartyFacet.cancelAsk.selector;
         galaxyPartySelectors[2] = GalaxyPartyFacet.approveAsk.selector;
         galaxyPartySelectors[3] = GalaxyPartyFacet.contribute.selector;
         galaxyPartySelectors[4] = GalaxyPartyFacet.settleAsk.selector;
         galaxyPartySelectors[5] = GalaxyPartyFacet.claim.selector;
+        galaxyPartySelectors[6] = GalaxyPartyFacet.updateAskPrice.selector;
         diamondCut[0] = IDiamondCut.FacetCut(address(galaxyParty), IDiamondCut.FacetCutAction.Add, galaxyPartySelectors);
 
         bytes4[] memory pointTokenSelectors = new bytes4[](17);

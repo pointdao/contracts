@@ -2,6 +2,12 @@
 pragma solidity 0.8.10;
 
 interface IGalaxyParty {
+    function updateAskPrice(
+        uint16 _askId,
+        uint256 _ethAmount,
+        uint256 _pointAmount
+    ) external;
+
     function initiateGalaxySwap(uint8 _point) external;
 
     function completeGalaxySwap(uint16 _swapId) external;

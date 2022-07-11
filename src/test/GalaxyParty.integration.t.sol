@@ -143,6 +143,50 @@ contract GalaxyPartyTest is DSTest, Test {
         vm.stopPrank();
     }
 
+    function test_AskPriceUpdated() public {
+        // approve ERC721 transfer and create GalaxyAsk
+        vm.startPrank(address(galaxyOwner));
+        IERC721(ecliptic).setApprovalForAll(address(diamond), true);
+        vm.expectEmit(true, false, false, false);
+        emit AskCreated(1, Ask(address(galaxyOwner), 999 * 10**18, 1_000 * 10**18, 0, 0, AskStatus.CREATED));
+        IGalaxyParty(address(diamond)).createAsk(0, 999 * 10**18, 1_000 * 10**18); // create ask valuing galaxy at 1000 ETH and asking for 1000 POINT, leaving 999 ETH unallocated
+        vm.expectEmit(true, false, false, false);
+        // galaxy owner updates ask price
+        emit AskPriceUpdated(1, Ask(address(galaxyOwner), 1_000 * 10**18, 0, 0, 0, AskStatus.CREATED), 999 * 10**18, 1_000 * 10**18);
+        IGalaxyParty(address(diamond)).updateAskPrice(1, 1_000 * 10**18, 0);
+        vm.stopPrank();
+        // governance approves ask
+        vm.prank(address(pointTreasury));
+        IGalaxyParty(address(diamond)).approveAsk(1);
+        // contributor contributes ETH to ask and settles ask
+        vm.deal(address(contributor), 1_000 * 10**18);
+        vm.startPrank(address(contributor));
+        vm.expectEmit(true, true, false, true);
+        emit Contributed(
+            1,
+            address(contributor),
+            Ask(address(galaxyOwner), 1_000 * 10**18, 0, 1_000 * 10**18, 0, AskStatus.APPROVED),
+            1_000 * 10**18
+        );
+        IGalaxyParty(address(diamond)).contribute{value: 1_000 * 10**18}(1);
+        vm.expectEmit(true, false, false, true);
+        emit AskSettled(1, Ask(address(galaxyOwner), 1_000 * 10**18, 0, 1_000 * 10**18, 0, AskStatus.ENDED));
+        IGalaxyParty(address(diamond)).settleAsk(1);
+        assertEq(IERC721(ecliptic).ownerOf(0), address(diamond));
+        assertEq(address(galaxyOwner).balance, 970 * 10**18);
+        assertEq(address(pointTreasury).balance, 30 * 10**18);
+        assertEq(IERC20(address(diamond)).balanceOf(address(galaxyOwner)), 0);
+        assertEq(IERC20(address(diamond)).balanceOf(address(pointTreasury)), 30_000 * 10**18);
+        assertEq(IERC20(address(diamond)).totalSupply(), 30_000 * 10**18);
+        // contributor claims POINT
+        vm.expectEmit(true, true, false, true);
+        emit Claimed(1, address(contributor), 1_000_000 * 10**18, 0);
+        IGalaxyParty(address(diamond)).claim(1);
+        vm.stopPrank();
+        assert(IERC20(address(diamond)).totalSupply() == 1_030_000 * 10**18);
+        assertEq(IERC20(address(diamond)).balanceOf(address(contributor)), 1_000_000 * 10**18);
+    }
+
     function test_SuccessfulAskFlowNoETH() public {
         // approve ERC721 transfer and create GalaxyAsk
         vm.startPrank(address(galaxyOwner));
