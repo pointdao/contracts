@@ -24,10 +24,10 @@ enum AskStatus {
 
 struct Ask {
     address owner;
-    uint256 amount;
+    uint256 ethAmount;
     uint256 pointAmount;
     uint256 totalContributedToParty;
-    uint8 point;
+    uint8 galaxyTokenId;
     AskStatus status;
 }
 

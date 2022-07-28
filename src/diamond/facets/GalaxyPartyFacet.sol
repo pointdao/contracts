@@ -26,15 +26,15 @@ contract GalaxyPartyFacet is Modifiers {
     }
 
     function createAsk(
-        uint8 _point,
+        uint8 _galaxyTokenId,
         uint256 _ethAmount,
         uint256 _pointAmount
     ) public {
         LibUrbit.updateEcliptic(s);
-        require(s.ecliptic.ownerOf(uint256(_point)) == LibMeta.msgSender(), "caller must own galaxy");
+        require(s.ecliptic.ownerOf(uint256(_galaxyTokenId)) == LibMeta.msgSender(), "caller must own galaxy");
         require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
         s.galaxyPartyAskIds++;
-        s.galaxyPartyAsks[s.galaxyPartyAskIds] = Ask(LibMeta.msgSender(), _ethAmount, _pointAmount, 0, _point, AskStatus.CREATED);
+        s.galaxyPartyAsks[s.galaxyPartyAskIds] = Ask(LibMeta.msgSender(), _ethAmount, _pointAmount, 0, _galaxyTokenId, AskStatus.CREATED);
         emit AskCreated(s.galaxyPartyAskIds, s.galaxyPartyAsks[s.galaxyPartyAskIds]);
     }
 
@@ -46,9 +46,9 @@ contract GalaxyPartyFacet is Modifiers {
         require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
         require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
         require(LibMeta.msgSender() == s.galaxyPartyAsks[_askId].owner, "only ask creator");
-        uint256 prevAmount = s.galaxyPartyAsks[_askId].amount;
+        uint256 prevAmount = s.galaxyPartyAsks[_askId].ethAmount;
         uint256 prevPointAmount = s.galaxyPartyAsks[_askId].pointAmount;
-        s.galaxyPartyAsks[_askId].amount = _ethAmount;
+        s.galaxyPartyAsks[_askId].ethAmount = _ethAmount;
         s.galaxyPartyAsks[_askId].pointAmount = _pointAmount;
         emit AskPriceUpdated(_askId, s.galaxyPartyAsks[_askId], prevAmount, prevPointAmount);
     }
@@ -77,7 +77,10 @@ contract GalaxyPartyFacet is Modifiers {
             lastApprovedAskStatus == AskStatus.NONE || lastApprovedAskStatus == AskStatus.CANCELED || lastApprovedAskStatus == AskStatus.ENDED,
             "there is already an active ask."
         );
-        require(s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].point)), "ask creator is no longer owner");
+        require(
+            s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].galaxyTokenId)),
+            "ask creator is no longer owner"
+        );
         s.galaxyPartyAsks[_askId].status = AskStatus.APPROVED;
         s.galaxyPartyLastApprovedAskId = _askId;
         emit AskApproved(_askId, s.galaxyPartyAsks[_askId]);
@@ -88,8 +91,11 @@ contract GalaxyPartyFacet is Modifiers {
         uint256 _amount = msg.value;
         require(_amount > 0, "must contribute ETH");
         require(s.galaxyPartyAsks[_askId].status == AskStatus.APPROVED && s.galaxyPartyLastApprovedAskId == _askId, "ask must be in approved state");
-        require(s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].point)), "ask creator does not own galaxy");
-        uint256 _remaining = s.galaxyPartyAsks[_askId].amount - s.galaxyPartyAsks[_askId].totalContributedToParty;
+        require(
+            s.galaxyPartyAsks[_askId].owner == s.ecliptic.ownerOf(uint256(s.galaxyPartyAsks[_askId].galaxyTokenId)),
+            "ask creator does not own galaxy"
+        );
+        uint256 _remaining = s.galaxyPartyAsks[_askId].ethAmount - s.galaxyPartyAsks[_askId].totalContributedToParty;
         require(_remaining >= _amount, "msg.value is greater than remaining amount");
         address _contributor = LibMeta.msgSender();
         s.galaxyPartyTotalContributed[_askId][_contributor] += _amount;
@@ -101,10 +107,10 @@ contract GalaxyPartyFacet is Modifiers {
         LibUrbit.updateEcliptic(s);
         require(s.galaxyPartyAsks[_askId].status == AskStatus.APPROVED, "ask status must be APPROVED");
         uint256 ethRaised = s.galaxyPartyAsks[_askId].totalContributedToParty;
-        require(ethRaised == s.galaxyPartyAsks[_askId].amount, "total contributed must equal asking price");
+        require(ethRaised == s.galaxyPartyAsks[_askId].ethAmount, "total contributed must equal asking price");
         s.galaxyPartyAsks[_askId].status = AskStatus.ENDED;
 
-        s.ecliptic.safeTransferFrom(s.galaxyPartyAsks[_askId].owner, address(this), uint256(s.galaxyPartyAsks[_askId].point));
+        s.ecliptic.safeTransferFrom(s.galaxyPartyAsks[_askId].owner, address(this), uint256(s.galaxyPartyAsks[_askId].galaxyTokenId));
 
         uint256 pointValuation = ethRaised * s.galaxyParty_TOKEN_SCALE + s.galaxyPartyAsks[_askId].pointAmount;
         uint256 treasuryPointInflation = (pointValuation * s.galaxyParty_TREASURY_POINT_INFLATION_BPS) / 10_000;
