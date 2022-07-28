@@ -57,7 +57,7 @@ contract Initializer is Ownable {
     function run() external onlyOwner {
         IDiamondCut.FacetCut[] memory diamondCut = new IDiamondCut.FacetCut[](4);
 
-        bytes4[] memory galaxyPartySelectors = new bytes4[](7);
+        bytes4[] memory galaxyPartySelectors = new bytes4[](9);
         galaxyPartySelectors[0] = GalaxyPartyFacet.createAsk.selector;
         galaxyPartySelectors[1] = GalaxyPartyFacet.cancelAsk.selector;
         galaxyPartySelectors[2] = GalaxyPartyFacet.approveAsk.selector;
@@ -65,9 +65,11 @@ contract Initializer is Ownable {
         galaxyPartySelectors[4] = GalaxyPartyFacet.settleAsk.selector;
         galaxyPartySelectors[5] = GalaxyPartyFacet.claim.selector;
         galaxyPartySelectors[6] = GalaxyPartyFacet.updateAskPrice.selector;
+        galaxyPartySelectors[7] = GalaxyPartyFacet.lastAskId.selector;
+        galaxyPartySelectors[8] = GalaxyPartyFacet.getAsk.selector;
         diamondCut[0] = IDiamondCut.FacetCut(address(galaxyParty), IDiamondCut.FacetCutAction.Add, galaxyPartySelectors);
 
-        bytes4[] memory pointTokenSelectors = new bytes4[](17);
+        bytes4[] memory pointTokenSelectors = new bytes4[](20);
         pointTokenSelectors[0] = PointTokenFacet.approve.selector;
         pointTokenSelectors[1] = PointTokenFacet.transfer.selector;
         pointTokenSelectors[2] = PointTokenFacet.transferFrom.selector;
@@ -85,6 +87,9 @@ contract Initializer is Ownable {
         pointTokenSelectors[14] = PointTokenFacet.getPastTotalSupply.selector;
         pointTokenSelectors[15] = PointTokenFacet.delegate.selector;
         pointTokenSelectors[16] = PointTokenFacet.delegateBySig.selector;
+        pointTokenSelectors[17] = PointTokenFacet.name.selector;
+        pointTokenSelectors[18] = PointTokenFacet.symbol.selector;
+        pointTokenSelectors[19] = PointTokenFacet.decimals.selector;
         diamondCut[1] = IDiamondCut.FacetCut(address(pointToken), IDiamondCut.FacetCutAction.Add, pointTokenSelectors);
 
         bytes4[] memory galaxyHolderSelectors = new bytes4[](6);

@@ -12,6 +12,17 @@ contract PointTokenFacet is Modifiers {
     /*//////////////////////////////////////////////////////////////
                                ERC20
     //////////////////////////////////////////////////////////////*/
+    function name() public view returns (string memory) {
+        return s.tokenName;
+    }
+
+    function symbol() public view returns (string memory) {
+        return s.tokenSymbol;
+    }
+
+    function decimals() public view returns (uint8) {
+        return s.tokenDecimals;
+    }
 
     function approve(address spender, uint256 amount) public returns (bool) {
         return LibPointToken.approve(spender, amount);
@@ -85,7 +96,7 @@ contract PointTokenFacet is Modifiers {
      * @dev Get the address `account` is currently delegating to.
      */
     function delegates(address account) external view returns (address) {
-        return s.token_delegates[account];
+        return s.tokenDelegates[account];
     }
 
     /**

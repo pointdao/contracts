@@ -32,6 +32,9 @@ struct Ask {
 }
 
 struct AppStorage {
+    address governance;
+    address multisig;
+    address manager;
     string tokenName;
     string tokenSymbol;
     uint8 tokenDecimals;
@@ -44,7 +47,7 @@ struct AppStorage {
     mapping(address => uint256) tokenNonces;
     bool tokenPaused;
     bytes32 token_DELEGATION_TYPEHASH;
-    mapping(address => address) token_delegates;
+    mapping(address => address) tokenDelegates;
     mapping(address => Checkpoint[]) token_checkpoints;
     Checkpoint[] token_totalSupplyCheckpoints;
     IAzimuth azimuth;
@@ -59,9 +62,6 @@ struct AppStorage {
     uint16 galaxyParty_TREASURY_POINT_INFLATION_BPS;
     uint16 galaxyParty_TREASURY_ETH_FEE_BPS;
     uint32 galaxyParty_TOKEN_SCALE;
-    address governance;
-    address multisig;
-    address manager;
 }
 
 library LibAppStorage {

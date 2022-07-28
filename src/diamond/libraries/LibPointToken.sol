@@ -79,7 +79,7 @@ library LibPointToken {
 
         emit Transfer(LibMeta.msgSender(), to, amount);
 
-        _moveVotingPower(s.token_delegates[LibMeta.msgSender()], s.token_delegates[to], amount);
+        _moveVotingPower(s.tokenDelegates[LibMeta.msgSender()], s.tokenDelegates[to], amount);
 
         return true;
     }
@@ -103,7 +103,7 @@ library LibPointToken {
 
         emit Transfer(from, to, amount);
 
-        _moveVotingPower(s.token_delegates[from], s.token_delegates[to], amount);
+        _moveVotingPower(s.tokenDelegates[from], s.tokenDelegates[to], amount);
 
         return true;
     }
@@ -185,9 +185,9 @@ library LibPointToken {
     function delegate(address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
 
-        address currentDelegate = s.token_delegates[LibMeta.msgSender()];
+        address currentDelegate = s.tokenDelegates[LibMeta.msgSender()];
         uint256 delegatorBalance = s.tokenBalanceOf[LibMeta.msgSender()];
-        s.token_delegates[LibMeta.msgSender()] = delegatee;
+        s.tokenDelegates[LibMeta.msgSender()] = delegatee;
 
         emit DelegateChanged(LibMeta.msgSender(), currentDelegate, delegatee);
 
@@ -217,9 +217,9 @@ library LibPointToken {
 
     function _delegate(address delegator, address delegatee) internal {
         AppStorage storage s = LibAppStorage.diamondStorage();
-        address currentDelegate = s.token_delegates[delegator];
+        address currentDelegate = s.tokenDelegates[delegator];
         uint256 delegatorBalance = s.tokenBalanceOf[delegator];
-        s.token_delegates[delegator] = delegatee;
+        s.tokenDelegates[delegator] = delegatee;
 
         emit DelegateChanged(delegator, currentDelegate, delegatee);
 
