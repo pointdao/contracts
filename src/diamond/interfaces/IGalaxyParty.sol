@@ -26,7 +26,11 @@ interface IGalaxyParty {
 
     function cancelAsk(uint16 _askId) external;
 
-    function approveAsk(uint16 _askId) external;
+    function approveAsk(
+        uint16 _askId,
+        uint256 _ethAmount,
+        uint256 _pointAmount
+    ) external;
 
     function contribute(uint16 _askId) external payable;
 

@@ -79,9 +79,3 @@ The governance system uses standard general-purpose openzeppelin governance cont
 POINT is an ERC20 token with extra voting functionality. The total supply should equal 1,000 \* the total amount of ETH contributed towards acquiring galaxies, plus 3% of that which is owned by the DAO treasury.
 
 POINT is mintable and pausable. Token transfers are paused at first, but governance can vote to unpause transfers. GalaxyParty can still mint while transfers are paused.
-
-## To Do
-
-- Get protocol audited
-- Thoroughly test token holders' ability to vote on Urbit proposals via Point DAO governance
-- Research ideal governance parameters (timelock, voting period, quorum, proposers and executors, etc) to maximize fairness and compatibility with Urbit governance and minimize attack surface area.

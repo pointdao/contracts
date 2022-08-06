@@ -11,7 +11,7 @@ import {Governor, IGovernor} from "@openzeppelin/contracts/governance/Governor.s
 contract PointGovernor is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
     constructor(IVotes _token, TimelockController _timelock)
         Governor("PointGovernor")
-        GovernorSettings(1, 45818, 1 * 10**17)
+        GovernorSettings(1, 137455, 1000 ether)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(4)
         GovernorTimelockControl(_timelock)

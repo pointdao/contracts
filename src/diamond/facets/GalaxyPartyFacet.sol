@@ -69,9 +69,17 @@ contract GalaxyPartyFacet is Modifiers {
         emit AskCanceled(_askId, s.galaxyPartyAsks[_askId], msg.sender, prevStatus);
     }
 
-    function approveAsk(uint16 _askId) public onlyGovernanceOrOwnerOrMultisig {
+    function approveAsk(
+        uint16 _askId,
+        uint256 _ethAmount,
+        uint256 _pointAmount
+    ) public onlyGovernanceOrOwnerOrMultisig {
         LibUrbit.updateEcliptic(s);
         require(s.galaxyPartyAsks[_askId].status == AskStatus.CREATED, "ask must be in created state");
+        require(
+            s.galaxyPartyAsks[_askId].ethAmount == _ethAmount && s.galaxyPartyAsks[_askId].pointAmount == _pointAmount,
+            "incorrect eth or point ask amount"
+        );
         AskStatus lastApprovedAskStatus = s.galaxyPartyAsks[s.galaxyPartyLastApprovedAskId].status;
         require(
             lastApprovedAskStatus == AskStatus.NONE || lastApprovedAskStatus == AskStatus.CANCELED || lastApprovedAskStatus == AskStatus.ENDED,

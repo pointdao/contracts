@@ -25,7 +25,7 @@ contract GalaxyHolderFacet is Modifiers, IERC721Receiver {
         uint8 _galaxy,
         bytes32 _proposal,
         bool _vote
-    ) external onlyGovernance {
+    ) external onlyGovernanceOrOwner {
         LibUrbit.castDocumentVote(_galaxy, _proposal, _vote);
     }
 
@@ -33,7 +33,7 @@ contract GalaxyHolderFacet is Modifiers, IERC721Receiver {
         uint8 _galaxy,
         address _proposal,
         bool _vote
-    ) external onlyGovernance {
+    ) external onlyGovernanceOrOwner {
         LibUrbit.castUpgradeVote(_galaxy, _proposal, _vote);
     }
 
@@ -45,5 +45,4 @@ contract GalaxyHolderFacet is Modifiers, IERC721Receiver {
     ) external returns (bytes4) {
         return bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
-
 }
