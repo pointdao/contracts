@@ -31,6 +31,10 @@ contract GalaxyPartyFacet is Modifiers {
         uint256 _pointAmount
     ) public {
         LibUrbit.updateEcliptic(s);
+        require(
+            s.ecliptic.getApproved(uint256(_galaxyTokenId)) == address(this) || s.ecliptic.isApprovedForAll(msg.sender, address(this)),
+            "must approve"
+        );
         require(s.ecliptic.ownerOf(uint256(_galaxyTokenId)) == LibMeta.msgSender(), "caller must own galaxy");
         require(_ethAmount > 0 || _pointAmount > 0, "eth amount and/or point amount must be greater than 0");
         s.galaxyPartyAskIds++;

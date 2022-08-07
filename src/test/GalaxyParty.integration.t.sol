@@ -150,6 +150,24 @@ contract GalaxyPartyTest is DSTest, Test {
         vm.stopPrank();
     }
 
+    function test_AskFlowNotApproved() public {
+        vm.startPrank(address(galaxyOwner));
+        vm.expectRevert("must approve");
+        galaxyParty.createAsk(0, 999 * 10**18, 1_000 * 10**18);
+        IERC721(ecliptic).approve(address(diamond), 0);
+        vm.expectEmit(true, false, false, false);
+        emit AskCreated(1, Ask(address(galaxyOwner), 999 * 10**18, 1_000 * 10**18, 0, 0, AskStatus.CREATED));
+        galaxyParty.createAsk(0, 999 * 10**18, 1_000 * 10**18);
+        IERC721(ecliptic).setApprovalForAll(address(diamond), true);
+        vm.expectEmit(true, false, false, false);
+        emit AskCreated(2, Ask(address(galaxyOwner), 999 * 10**18, 1_000 * 10**18, 0, 1, AskStatus.CREATED));
+        galaxyParty.createAsk(1, 999 * 10**18, 1_000 * 10**18);
+        IERC721(ecliptic).setApprovalForAll(address(diamond), false);
+        vm.expectRevert("must approve");
+        galaxyParty.createAsk(2, 999 * 10**18, 1_000 * 10**18);
+        vm.stopPrank();
+    }
+
     function test_AskPriceUpdated() public {
         // approve ERC721 transfer and create GalaxyAsk
         vm.startPrank(address(galaxyOwner));
