@@ -17,7 +17,7 @@ contract GalaxyPartyFacet is Modifiers {
     event AskSettled(uint16 indexed askId, Ask ask);
     event ETHTransferFailed(uint16 indexed askId, address intended, uint256 amount);
 
-    function lastAskId() public view returns (uint16) {
+    function nextAskId() public view returns (uint16) {
         return s.galaxyPartyAskIds;
     }
 
@@ -32,7 +32,7 @@ contract GalaxyPartyFacet is Modifiers {
     ) public {
         LibUrbit.updateEcliptic(s);
         require(
-            s.ecliptic.getApproved(uint256(_galaxyTokenId)) == address(this) || s.ecliptic.isApprovedForAll(msg.sender, address(this)),
+            s.ecliptic.getApproved(uint256(_galaxyTokenId)) == address(this) || s.ecliptic.isApprovedForAll(LibMeta.msgSender(), address(this)),
             "must approve"
         );
         require(s.ecliptic.ownerOf(uint256(_galaxyTokenId)) == LibMeta.msgSender(), "caller must own galaxy");
@@ -70,7 +70,7 @@ contract GalaxyPartyFacet is Modifiers {
         );
         AskStatus prevStatus = s.galaxyPartyAsks[_askId].status;
         s.galaxyPartyAsks[_askId].status = AskStatus.CANCELED;
-        emit AskCanceled(_askId, s.galaxyPartyAsks[_askId], msg.sender, prevStatus);
+        emit AskCanceled(_askId, s.galaxyPartyAsks[_askId], LibMeta.msgSender(), prevStatus);
     }
 
     function approveAsk(

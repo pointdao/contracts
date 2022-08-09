@@ -65,7 +65,7 @@ contract Initializer is Ownable {
         galaxyPartySelectors[4] = GalaxyPartyFacet.settleAsk.selector;
         galaxyPartySelectors[5] = GalaxyPartyFacet.claim.selector;
         galaxyPartySelectors[6] = GalaxyPartyFacet.updateAskPrice.selector;
-        galaxyPartySelectors[7] = GalaxyPartyFacet.lastAskId.selector;
+        galaxyPartySelectors[7] = GalaxyPartyFacet.nextAskId.selector;
         galaxyPartySelectors[8] = GalaxyPartyFacet.getAsk.selector;
         diamondCut[0] = IDiamondCut.FacetCut(address(galaxyParty), IDiamondCut.FacetCutAction.Add, galaxyPartySelectors);
 
