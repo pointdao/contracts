@@ -12,3 +12,4 @@ remappings = [
   "@openzeppelin=lib/openzeppelin-contracts/",
   "ds-test/=lib/ds-test/src/"
 ]
+fs_permissions = [{ access = "read", path = "./"}]

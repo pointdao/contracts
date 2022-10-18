@@ -1,7 +1,7 @@
 pragma solidity 0.4.24;
 
 import {Azimuth} from "./Azimuth.sol";
-import {Ownable} from "./Ownable.sol";
+import {Ownable} from "./UrbitOwnable.sol";
 import {Polls} from "./Polls.sol";
 import {ReadsAzimuth} from "./ReadsAzimuth.sol";
 

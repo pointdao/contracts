@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {Ownable} from "./UrbitOwnable.sol";
 
 contract Azimuth is Ownable {
     event OwnerChanged(uint32 indexed point, address indexed owner);

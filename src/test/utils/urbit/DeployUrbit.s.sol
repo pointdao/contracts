@@ -12,14 +12,14 @@ contract DeployUrbit is Test {
     address public ecliptic;
 
     function run() external {
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
         azimuth = deployCode("Azimuth.sol:Azimuth");
         polls = deployCode("Polls.sol:Polls", abi.encode(uint256(2592000), uint256(2592000)));
         claims = deployCode("Claims.sol:Claims", abi.encode(azimuth));
         ecliptic = deployCode("Ecliptic.sol:Ecliptic", abi.encode(address(0), azimuth, polls, claims, address(0)));
         IERC173(azimuth).transferOwnership(ecliptic);
         IERC173(polls).transferOwnership(ecliptic);
-        IERC173(ecliptic).transferOwnership(msg.sender);
         vm.stopBroadcast();
     }
 }

@@ -32,10 +32,15 @@ contract Deployer is Script, Ownable {
     PointGovernor public pointGovernor;
     PointTreasury public pointTreasury;
 
+    // goerli addres
+    address private constant azimuth = 0x6D7274C4E24cAa375e5914889b2640a45A97aF27;
+    address private constant multisig = 0xD4DCf5e4fF37bdBcC0B7B77B554f1cB08F4995f2;
+    address private constant weth = 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6;
+
     // rinkeby addrs
-    address private constant azimuth = 0xC6Fe03489FAd98B949b6a8b37229974908dD9390;
-    address private constant multisig = 0xF87805a8cB1f7C9f061c89243D11a427358b6df7;
-    address private constant weth = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
+    // address private constant azimuth = 0xC6Fe03489FAd98B949b6a8b37229974908dD9390;
+    // address private constant multisig = 0xF87805a8cB1f7C9f061c89243D11a427358b6df7;
+    // address private constant weth = 0xc778417E063141139Fce010982780140Aa0cD5Ab;
 
     // // mainnet addrs
     // address private constant azimuth = 0x223c067F8CF28ae173EE5CafEa60cA44C335fecB;
@@ -44,9 +49,12 @@ contract Deployer is Script, Ownable {
 
     // only for usage with `forge script`
     function run() external {
-        vm.startBroadcast();
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address deployerAddress = vm.envAddress("DEPLOYER_ADDRESS");
 
-        diamond = new Diamond(msg.sender);
+        vm.startBroadcast(deployerPrivateKey);
+
+        diamond = new Diamond(deployerAddress);
         galaxyParty = new GalaxyPartyFacet();
         pointToken = new PointTokenFacet();
         galaxyHolder = new GalaxyHolderFacet();

@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import {Ownable} from "./Ownable.sol";
+import {Ownable} from "./UrbitOwnable.sol";
 import {SafeMath} from "./SafeMath.sol";
 import {SafeMath16} from "./SafeMath16.sol";
 import {SafeMath8} from "./SafeMath8.sol";

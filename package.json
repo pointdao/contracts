@@ -11,8 +11,8 @@
   },
   "type": "module",
   "files": [
-    "./dist/**/*",
-    "./dist/*"
+    "out/**/*",
+    "out/*"
   ],
   "private": "false",
   "repository": {
